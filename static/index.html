@@ -832,9 +832,7 @@ async function loadFromHash() {
 var examplesSel = document.getElementById('examples');
 var EXAMPLES_BASE = 'https://raw.githubusercontent.com/CalcMark/go-calcmark/main/testdata/examples/';
 
-examplesSel.addEventListener('change', async function() {
-  var name = examplesSel.value;
-  if (!name) return;
+async function loadExample(name) {
   try {
     var res = await fetch(EXAMPLES_BASE + name + '.cm');
     if (!res.ok) throw new Error();
@@ -843,10 +841,19 @@ examplesSel.addEventListener('change', async function() {
     lastRenderedSource = '';
     lastRawSource = '';
     renderCurrent();
-    updateHash();
+    // Use friendly /x/ URL instead of hash for examples
+    history.replaceState(null, '', '/x/' + name);
+    cmBtn.style.display = 'none';
+    cliHint.textContent = '';
   } catch(e) {
     showToast('Could not load example', 'error', 3000);
   }
+}
+
+examplesSel.addEventListener('change', async function() {
+  var name = examplesSel.value;
+  if (!name) return;
+  await loadExample(name);
   examplesSel.value = '';
 });
 
@@ -854,7 +861,13 @@ examplesSel.addEventListener('change', async function() {
 // Init
 // ============================================================
 (async function() {
-  await loadFromHash();
+  // Load from /x/<name> path or #0:<hash>
+  var xMatch = location.pathname.match(/^\/x\/(.+)$/);
+  if (xMatch) {
+    await loadExample(xMatch[1]);
+  } else {
+    await loadFromHash();
+  }
   if (input.value.trim()) {
     shareBtn.disabled = false;
     if (location.hash && location.hash.startsWith('#0:')) {
