@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <rect x="60" y="180" width="500" height="280" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="80" y="230" font-family="monospace" font-size="18" fill="#e5e5e5">price = 100 USD</text>
+  <text x="80" y="260" font-family="monospace" font-size="18" fill="#e5e5e5">tax = 8.5%</text>
+  <text x="80" y="290" font-family="monospace" font-size="18" fill="#e5e5e5">total = price + tax</text>
+  <rect x="640" y="180" width="500" height="280" rx="8" fill="#161b22" stroke="#7D56F4" stroke-width="2" stroke-opacity="0.4"/>
+  <rect x="660" y="220" width="460" height="100" rx="4" fill="#1c2128"/>
+  <line x1="660" y1="220" x2="660" y2="320" stroke="#a371f7" stroke-width="4"/>
+  <text x="680" y="252" font-family="monospace" font-size="17" fill="#e5e5e5">price = 100 USD</text>
+  <text x="1060" y="252" font-family="monospace" font-size="17" fill="#a371f7" text-anchor="end">= $100.00</text>
+  <text x="680" y="282" font-family="monospace" font-size="17" fill="#e5e5e5">tax = 8.5%</text>
+  <text x="1060" y="282" font-family="monospace" font-size="17" fill="#a371f7" text-anchor="end">= 8.5%</text>
+  <text x="680" y="312" font-family="monospace" font-size="17" fill="#e5e5e5">total = price + tax</text>
+  <text x="1060" y="312" font-family="monospace" font-size="17" fill="#a371f7" text-anchor="end">= $108.50</text>
+  <!-- Lark pixel bird -->
+  <g fill="#7D56F4" transform="translate(540,40) scale(2.5)">
+    <rect x="9" y="0" width="2" height="1"/>
+    <rect x="7" y="1" width="6" height="1"/>
+    <rect x="6" y="2" width="8" height="1"/>
+    <rect x="6" y="3" width="3" height="1"/>
+    <rect x="10" y="3" width="5" height="1"/>
+    <rect x="6" y="4" width="9" height="1"/>
+    <rect x="8" y="5" width="5" height="1"/>
+    <rect x="6" y="6" width="8" height="1"/>
+    <rect x="4" y="7" width="2" height="1"/>
+    <rect x="8" y="7" width="6" height="1"/>
+    <rect x="2" y="8" width="2" height="1"/>
+    <rect x="8" y="8" width="5" height="1"/>
+    <rect x="2" y="9" width="12" height="1"/>
+    <rect x="1" y="10" width="12" height="1"/>
+    <rect x="0" y="11" width="12" height="1"/>
+    <rect x="0" y="12" width="4" height="1"/>
+    <rect x="7" y="12" width="5" height="1"/>
+    <rect x="8" y="13" width="3" height="1"/>
+    <rect x="8" y="14" width="2" height="1"/>
+    <rect x="11" y="14" width="2" height="1"/>
+    <rect x="8" y="15" width="3" height="1"/>
+    <rect x="11" y="15" width="3" height="1"/>
+  </g>
+  <text x="600" y="145" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#e5e5e5" text-anchor="middle">CalcMark Lark</text>
+  <text x="600" y="540" font-family="system-ui, sans-serif" font-size="20" fill="#8b949e" text-anchor="middle">Have a lark with live CalcMark documents</text>
+  <text x="600" y="575" font-family="system-ui, sans-serif" font-size="16" fill="#6e7781" text-anchor="middle">lark.calcmark.org</text>
+</svg>

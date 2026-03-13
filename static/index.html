@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalcMark Lark</title>
+<meta name="description" content="Convert CalcMark documents to HTML, Markdown, Text, and JSON. Live preview, shareable URLs, zero setup.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CalcMark Lark">
+<meta property="og:description" content="Have a lark with live CalcMark documents. Paste, preview, share.">
+<meta property="og:image" content="/og.png">
+<meta property="og:url" content="https://lark.calcmark.org">
+<meta property="og:site_name" content="CalcMark">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CalcMark Lark">
+<meta name="twitter:description" content="Have a lark with live CalcMark documents. Paste, preview, share.">
+<meta name="twitter:image" content="/og.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cg fill='%237D56F4'%3E%3Crect x='9' y='0' width='2' height='1'/%3E%3Crect x='7' y='1' width='6' height='1'/%3E%3Crect x='6' y='2' width='8' height='1'/%3E%3Crect x='6' y='3' width='3' height='1'/%3E%3Crect x='10' y='3' width='5' height='1'/%3E%3Crect x='6' y='4' width='9' height='1'/%3E%3Crect x='8' y='5' width='5' height='1'/%3E%3Crect x='6' y='6' width='8' height='1'/%3E%3Crect x='4' y='7' width='2' height='1'/%3E%3Crect x='8' y='7' width='6' height='1'/%3E%3Crect x='2' y='8' width='2' height='1'/%3E%3Crect x='8' y='8' width='5' height='1'/%3E%3Crect x='2' y='9' width='12' height='1'/%3E%3Crect x='1' y='10' width='12' height='1'/%3E%3Crect x='0' y='11' width='12' height='1'/%3E%3Crect x='0' y='12' width='4' height='1'/%3E%3Crect x='7' y='12' width='5' height='1'/%3E%3Crect x='8' y='13' width='3' height='1'/%3E%3Crect x='8' y='14' width='2' height='1'/%3E%3Crect x='11' y='14' width='2' height='1'/%3E%3Crect x='8' y='15' width='3' height='1'/%3E%3Crect x='11' y='15' width='3' height='1'/%3E%3C/g%3E%3C/svg%3E">
+<script>
+(function() {
+  var t = localStorage.getItem('theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* === Design Tokens === */
+:root {
+  --color-primary: #7D56F4;
+  --color-primary-hover: #6644d8;
+  --color-text: #1a1a1a;
+  --color-text-muted: #555;
+  --color-text-faint: #888;
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f6f8fa;
+  --color-bg-inset: #f0f2f5;
+  --color-border: #d1d5db;
+  --color-border-strong: #9ca3af;
+  --color-code-bg: #f3f4f6;
+  --color-code-text: #1a1a1a;
+  --color-success: #1a7f37;
+  --color-error: #cf222e;
+  --color-warning: #9a6700;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+}
+[data-theme="dark"] {
+  --color-primary: #a371f7;
+  --color-primary-hover: #b78df9;
+  --color-text: #e5e5e5;
+  --color-text-muted: #8b949e;
+  --color-text-faint: #6e7781;
+  --color-bg: #0d1117;
+  --color-bg-subtle: #161b22;
+  --color-bg-inset: #1c2128;
+  --color-border: #30363d;
+  --color-border-strong: #6e7681;
+  --color-code-bg: #161b22;
+  --color-code-text: #e5e5e5;
+  --color-success: #3fb950;
+  --color-error: #f85149;
+  --color-warning: #d29922;
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* === Reset === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-base), color var(--transition-base);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Nav === */
+.nav {
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  position: sticky; top: 0; z-index: 10;
+}
+.nav-inner {
+  max-width: 1400px;
+  margin: 0 auto; padding: 0 24px;
+  height: 100%; display: flex; align-items: center; gap: 12px;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 1rem;
+  color: var(--color-text); text-decoration: none; letter-spacing: -0.02em;
+}
+.nav-logo:hover { color: var(--color-primary); }
+.nav-logo svg { width: 20px; height: 21px; }
+.nav-spacer { flex: 1; }
+.nav-link {
+  font-size: 0.8125rem; color: var(--color-text-muted);
+  text-decoration: none; padding: 3px 8px;
+  border-radius: var(--radius-sm); transition: color var(--transition-fast);
+}
+.nav-link:hover { color: var(--color-primary); }
+.theme-toggle {
+  background: none; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  padding: 3px 7px; font-size: 0.875rem; line-height: 1;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.theme-toggle:hover { color: var(--color-text); border-color: var(--color-border-strong); }
+[data-theme="dark"] .icon-moon { display: none; }
+[data-theme="dark"] .icon-sun  { display: inline; }
+:root .icon-sun  { display: none; }
+:root .icon-moon { display: inline; }
+
+/* === Layout === */
+main {
+  max-width: 1400px; width: 100%;
+  margin: 0 auto; padding: 16px 24px;
+  flex: 1; display: flex; flex-direction: column;
+}
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  flex: 1;
+}
+.col { display: flex; flex-direction: column; min-height: 0; }
+
+/* === Panel headers === */
+.panel-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px; min-height: 28px;
+}
+.panel-label {
+  font-size: 0.8125rem; font-weight: 500; color: var(--color-text-muted);
+}
+.panel-spacer { flex: 1; }
+
+/* === Small controls === */
+.small-select {
+  padding: 2px 6px; font-size: 0.75rem;
+  font-family: var(--font-sans);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle); color: var(--color-text-muted); cursor: pointer;
+}
+.small-btn {
+  padding: 2px 10px; font-size: 0.75rem; font-weight: 500;
+  font-family: var(--font-sans);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle); color: var(--color-text-muted);
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.small-btn:hover { color: var(--color-text); border-color: var(--color-border-strong); }
+.small-btn-primary {
+  background: var(--color-primary); color: #fff; border-color: var(--color-primary);
+}
+.small-btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.small-btn-cm {
+  font-family: var(--font-mono); font-size: 0.625rem; font-weight: 600;
+  letter-spacing: 0.03em; opacity: 0.7;
+}
+.small-btn-cm:hover { opacity: 1; color: var(--color-primary); border-color: var(--color-primary); }
+.small-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* === Info popover === */
+.info-wrap { position: relative; }
+.info-btn {
+  background: none; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  padding: 3px 7px; font-size: 0.875rem; line-height: 1;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.info-btn:hover { color: var(--color-text); border-color: var(--color-border-strong); }
+.info-popover {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px);
+  width: 260px; padding: 14px 16px;
+  background: var(--color-bg); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  font-size: 0.8125rem; line-height: 1.6; z-index: 20;
+}
+.info-popover.visible { display: block; }
+.info-popover a { color: var(--color-primary); text-decoration: none; }
+.info-popover a:hover { text-decoration: underline; }
+.info-popover p { margin-bottom: 8px; }
+.info-popover p:last-child { margin-bottom: 0; }
+
+/* === Textarea === */
+#input {
+  width: 100%; flex: 1; min-height: 300px;
+  padding: 14px; font-family: var(--font-mono);
+  font-size: 0.8125rem; line-height: 1.55;
+  color: var(--color-code-text); background: var(--color-code-bg);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  resize: vertical; transition: border-color var(--transition-fast);
+}
+#input:focus {
+  outline: none; border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+/* === Preview iframe === */
+#preview {
+  width: 100%; flex: 1; min-height: 300px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: #fff;
+}
+
+/* === Raw output === */
+#rawOutput {
+  width: 100%; flex: 1; min-height: 300px;
+  padding: 14px; font-family: var(--font-mono);
+  font-size: 0.75rem; line-height: 1.5;
+  color: var(--color-code-text); background: var(--color-code-bg);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  overflow: auto; white-space: pre-wrap; word-break: break-word;
+  display: none;
+}
+#rawOutput.raw-error {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* === Toast === */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  padding: 8px 20px; border-radius: var(--radius-md);
+  font-size: 0.8125rem; font-weight: 500;
+  box-shadow: var(--shadow-md); opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: none; z-index: 100;
+}
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast-success { background: var(--color-success); color: #fff; }
+.toast-error   { background: var(--color-error);   color: #fff; }
+.toast-warning { background: var(--color-warning); color: #fff; }
+
+/* === Clipboard fallback === */
+.clipboard-fallback {
+  display: none; margin-top: 4px; gap: 6px; align-items: center;
+}
+.clipboard-fallback.visible { display: flex; }
+.clipboard-fallback input {
+  flex: 1; padding: 4px 8px; font-family: var(--font-mono); font-size: 0.6875rem;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle); color: var(--color-text);
+}
+.clipboard-fallback label { font-size: 0.6875rem; color: var(--color-text-faint); white-space: nowrap; }
+
+/* === Status bar === */
+.status-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 24px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.6875rem; font-family: var(--font-mono);
+  color: var(--color-text-faint);
+  min-height: 28px;
+}
+.status-bar-error { color: var(--color-error); }
+.status-bar-spacer { flex: 1; }
+.cli-hint { opacity: 0.65; cursor: pointer; }
+.cli-hint:hover { opacity: 1; color: var(--color-primary); }
+.cli-hint code { font-family: var(--font-mono); font-size: inherit; }
+
+/* === Footer === */
+footer {
+  border-top: 1px solid var(--color-border);
+  padding: 8px 24px; text-align: center;
+  font-size: 0.6875rem; color: var(--color-text-faint);
+}
+footer a { color: var(--color-text-muted); text-decoration: none; }
+footer a:hover { color: var(--color-primary); text-decoration: underline; }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .columns { grid-template-columns: 1fr; }
+  main { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 50" shape-rendering="crispEdges">
+        <g fill="#7D56F4">
+          <rect x="28" y="2" width="4" height="2"/><rect x="24" y="4" width="12" height="2"/>
+          <rect x="20" y="6" width="20" height="2"/><rect x="18" y="8" width="24" height="2"/>
+          <rect x="16" y="10" width="28" height="2"/><rect x="16" y="12" width="12" height="2"/>
+          <rect x="30" y="12" width="4" height="2"/><rect x="36" y="12" width="8" height="2"/>
+          <rect x="16" y="14" width="32" height="2"/><rect x="16" y="16" width="32" height="2"/>
+          <rect x="18" y="18" width="24" height="2"/><rect x="22" y="20" width="16" height="2"/>
+          <rect x="18" y="22" width="24" height="2"/><rect x="14" y="24" width="28" height="2"/>
+          <rect x="10" y="26" width="6" height="2"/><rect x="24" y="26" width="18" height="2"/>
+          <rect x="6" y="28" width="8" height="2"/><rect x="24" y="28" width="18" height="2"/>
+          <rect x="4" y="30" width="6" height="2"/><rect x="24" y="30" width="16" height="2"/>
+          <rect x="4" y="32" width="36" height="2"/><rect x="2" y="34" width="36" height="2"/>
+          <rect x="0" y="36" width="36" height="2"/><rect x="0" y="38" width="12" height="2"/>
+          <rect x="18" y="38" width="16" height="2"/><rect x="0" y="40" width="8" height="2"/>
+          <rect x="20" y="40" width="14" height="2"/><rect x="22" y="42" width="10" height="2"/>
+          <rect x="24" y="44" width="4" height="2"/><rect x="30" y="44" width="4" height="2"/>
+          <rect x="24" y="46" width="4" height="2"/><rect x="30" y="46" width="4" height="2"/>
+          <rect x="22" y="48" width="8" height="2"/><rect x="30" y="48" width="8" height="2"/>
+        </g>
+      </svg>
+      CalcMark Lark
+    </a>
+    <div class="nav-spacer"></div>
+    <a href="https://calcmark.org/docs/" class="nav-link">Learn to lark</a>
+    <div class="info-wrap">
+      <button class="info-btn" onclick="toggleInfo()" aria-label="About">&#9432;</button>
+      <div class="info-popover" id="infoPopover">
+        <p><strong>CalcMark Lark</strong> &mdash; a live CalcMark playground.</p>
+        <p><a href="https://calcmark.org">calcmark.org</a> &middot; <a href="https://github.com/CalcMark/calcmark-lark">GitHub</a> &middot; <a href="https://calcmark.org/docs/">Docs</a></p>
+      </div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <span class="icon-moon">&#9789;</span>
+      <span class="icon-sun">&#9788;</span>
+    </button>
+  </div>
+</nav>
+
+<main>
+  <div class="columns">
+    <!-- Left: Editor -->
+    <div class="col">
+      <div class="panel-header">
+        <span class="panel-label">Document</span>
+        <select id="examples" class="small-select" aria-label="Load example">
+          <option value="">Load example&hellip;</option>
+          <option value="budget">Budget</option>
+          <option value="datacenter-cost">Datacenter Cost</option>
+          <option value="home-renovation">Home Renovation</option>
+          <option value="investment-growth">Investment Growth</option>
+          <option value="job-offer">Job Offer Comparison</option>
+          <option value="project-workback">Project Workback</option>
+          <option value="recipe-scaling">Recipe Scaling</option>
+          <option value="system-sizing">System Sizing</option>
+          <option value="unit-conversion">Unit Conversion</option>
+        </select>
+        <div class="panel-spacer"></div>
+        <button id="shareBtn" class="small-btn small-btn-primary" onclick="share()" disabled>Share</button>
+        <button id="cmBtn" class="small-btn small-btn-cm" onclick="copyCmCommand()" style="display:none;" title="Copy cm CLI command">cm</button>
+      </div>
+      <textarea id="input" spellcheck="false">price = 100 USD
+tax = 8.5%
+total = price + tax</textarea>
+      <div class="clipboard-fallback" id="clipboardFallback">
+        <label>Copy manually:</label>
+        <input type="text" id="fallbackUrl" readonly onclick="this.select()">
+      </div>
+    </div>
+
+    <!-- Right: Output -->
+    <div class="col">
+      <div class="panel-header">
+        <span class="panel-label">Output</span>
+        <select id="outputMode" class="small-select" aria-label="Output format">
+          <option value="preview">Preview</option>
+          <option value="html">HTML</option>
+          <option value="markdown">Markdown</option>
+          <option value="text">Text</option>
+          <option value="json">JSON</option>
+        </select>
+        <div class="panel-spacer"></div>
+        <button id="copyBtn" class="small-btn" onclick="copyOutput()" style="display:none;">Copy</button>
+        <button id="downloadBtn" class="small-btn" onclick="downloadOutput()" style="display:none;">Download</button>
+      </div>
+      <iframe id="preview" sandbox="allow-same-origin" frameborder="0"></iframe>
+      <pre id="rawOutput"></pre>
+    </div>
+  </div>
+</main>
+
+<div class="status-bar" id="statusBar">
+  <span id="statusMsg"></span>
+  <div class="status-bar-spacer"></div>
+  <span id="cliHint" class="cli-hint"></span>
+  <span id="statusTime"></span>
+</div>
+
+<footer>
+  <a href="https://calcmark.org">CalcMark</a> &middot; have a lark
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// Theme
+// ============================================================
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// ============================================================
+// Info popover
+// ============================================================
+function toggleInfo() {
+  document.getElementById('infoPopover').classList.toggle('visible');
+}
+// Close popover on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.info-wrap')) {
+    document.getElementById('infoPopover').classList.remove('visible');
+  }
+});
+
+// ============================================================
+// DOM
+// ============================================================
+var input       = document.getElementById('input');
+var shareBtn    = document.getElementById('shareBtn');
+var statusMsg   = document.getElementById('statusMsg');
+var statusTime  = document.getElementById('statusTime');
+var cliHint     = document.getElementById('cliHint');
+var outputMode  = document.getElementById('outputMode');
+var previewEl   = document.getElementById('preview');
+var rawOutput   = document.getElementById('rawOutput');
+var copyBtn     = document.getElementById('copyBtn');
+var cmBtn       = document.getElementById('cmBtn');
+var downloadBtn = document.getElementById('downloadBtn');
+var toast       = document.getElementById('toast');
+
+// ============================================================
+// Debounced live render
+// ============================================================
+var DEBOUNCE_MS = 500;
+var debounceTimer = null;
+var currentController = null;
+var lastRenderedSource = '';
+var lastRawSource = '';   // track what raw export was fetched for
+var lastRawFormat = '';
+
+input.addEventListener('input', function() {
+  var hasContent = input.value.trim().length > 0;
+  shareBtn.disabled = !hasContent;
+
+  if (!hasContent) {
+    lastRenderedSource = '';
+    lastRawSource = '';
+    showPreviewMode();
+    previewEl.srcdoc = '';
+    history.replaceState(null, '', location.pathname);
+    cliHint.textContent = '';
+    return;
+  }
+
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(function() {
+    renderCurrent();
+    updateHash();
+  }, DEBOUNCE_MS);
+});
+
+// Re-render when output mode changes
+outputMode.addEventListener('change', function() {
+  renderCurrent();
+});
+
+// ============================================================
+// Render based on current mode
+// ============================================================
+function renderCurrent() {
+  var mode = outputMode.value;
+  if (mode === 'preview') {
+    renderPreview();
+  } else {
+    renderRaw(mode);
+  }
+}
+
+// ============================================================
+// Preview (rendered HTML in iframe)
+// ============================================================
+function showPreviewMode() {
+  previewEl.style.display = '';
+  rawOutput.style.display = 'none';
+  copyBtn.style.display = 'none';
+  downloadBtn.style.display = 'none';
+}
+
+function showRawMode() {
+  previewEl.style.display = 'none';
+  rawOutput.style.display = 'block';
+  copyBtn.style.display = '';
+  downloadBtn.style.display = '';
+}
+
+async function renderPreview() {
+  var source = input.value;
+  if (!source.trim()) return;
+  if (source === lastRenderedSource) { showPreviewMode(); return; }
+
+  if (currentController) currentController.abort();
+  currentController = new AbortController();
+
+  setStatus('Rendering\u2026');
+  var t0 = performance.now();
+
+  try {
+    var res = await fetch('/api/convert?format=html', {
+      method: 'POST', body: source, signal: currentController.signal,
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      setStatus(err.error || 'Error', true);
+      return;
+    }
+    var html = await res.text();
+    lastRenderedSource = source;
+    previewEl.srcdoc = html;
+    previewEl.onload = function() {
+      try {
+        var body = previewEl.contentDocument.body;
+        if (body) previewEl.style.height = body.scrollHeight + 32 + 'px';
+      } catch(e) {}
+    };
+    showPreviewMode();
+    setStatus('', false, performance.now() - t0);
+  } catch(err) {
+    if (err.name === 'AbortError') return;
+    setStatus('Network error', true);
+  } finally {
+    currentController = null;
+  }
+}
+
+// ============================================================
+// Raw format output
+// ============================================================
+async function renderRaw(format) {
+  var source = input.value;
+  if (!source.trim()) return;
+
+  // Use cached result if source + format haven't changed and we have content
+  if (lastRawSource && source === lastRawSource && format === lastRawFormat) { showRawMode(); return; }
+
+  setStatus('Converting\u2026');
+  var t0 = performance.now();
+
+  try {
+    var res = await fetch('/api/convert?format=' + format, {
+      method: 'POST', body: source,
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      var errMsg = err.error || 'Error';
+      rawOutput.textContent = errMsg;
+      rawOutput.classList.add('raw-error');
+      lastRawSource = '';
+      lastRawFormat = '';
+      showRawMode();
+      setStatus(errMsg, true);
+      return;
+    }
+    rawOutput.textContent = await res.text();
+    rawOutput.classList.remove('raw-error');
+    lastRawSource = source;
+    lastRawFormat = format;
+    showRawMode();
+    setStatus('', false, performance.now() - t0);
+  } catch(e) {
+    setStatus('Network error', true);
+  }
+}
+
+// ============================================================
+// Copy & Download
+// ============================================================
+async function copyOutput() {
+  await copyToClipboard(rawOutput.textContent);
+}
+
+function downloadOutput() {
+  var format = outputMode.value;
+  var extensions = { html: '.html', markdown: '.md', text: '.txt', json: '.json' };
+  var mimeTypes = { html: 'text/html', markdown: 'text/markdown', text: 'text/plain', json: 'application/json' };
+  var blob = new Blob([rawOutput.textContent], { type: mimeTypes[format] || 'text/plain' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'calcmark' + (extensions[format] || '.txt');
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// Hash (live URL update)
+// ============================================================
+async function updateHash() {
+  var source = input.value;
+  if (!source.trim()) {
+    history.replaceState(null, '', location.pathname);
+    cmBtn.style.display = 'none';
+    return;
+  }
+  try {
+    var encoded = await compressToBase64url(source);
+    var fragment = '0:' + encoded;
+    var url = location.origin + location.pathname + '#' + fragment;
+    if (url.length > 2000) {
+      history.replaceState(null, '', location.pathname);
+      cmBtn.style.display = 'none';
+    } else {
+      history.replaceState(null, '', '#' + fragment);
+      cmBtn.style.display = '';
+    }
+    updateCliHint();
+  } catch(e) { /* ignore */ }
+}
+
+function getCmCommand() {
+  var hash = location.hash;
+  if (!hash || !hash.startsWith('#0:')) return null;
+  var payload = hash.slice(3);
+  return 'cm remote --http ' + location.origin + '/d/' + payload;
+}
+
+function copyCmCommand() {
+  var cmd = getCmCommand();
+  if (cmd) {
+    copyToClipboard(cmd);
+  }
+}
+
+// ============================================================
+// Share
+// ============================================================
+function share() {
+  var source = input.value;
+  if (!source.trim()) return;
+
+  // Hash is kept up-to-date by updateHash() on debounce — just read it
+  var hash = location.hash;
+  if (!hash || !hash.startsWith('#0:')) {
+    showToast('Document too big to share via URL', 'warning', 3000);
+    return;
+  }
+
+  var url = location.origin + location.pathname + hash;
+  copyToClipboard(url);
+  updateCliHint();
+}
+
+// ============================================================
+// Clipboard
+// ============================================================
+function copyToClipboard(text) {
+  // Safari-compatible: ClipboardItem API works on localhost
+  if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+    var blob = new Blob([text], { type: 'text/plain' });
+    var item = new ClipboardItem({ 'text/plain': blob });
+    navigator.clipboard.write([item]).then(function() {
+      showToast('Copied!', 'success', 2000);
+    }, function() {
+      fallbackCopy(text);
+    });
+    return;
+  }
+  // execCommand fallback — must be synchronous from user gesture
+  if (execCopy(text)) {
+    showToast('Copied!', 'success', 2000);
+    return;
+  }
+  fallbackCopy(text);
+}
+
+function execCopy(text) {
+  window.getSelection().removeAllRanges();
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  var ok = document.execCommand('copy');
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function fallbackCopy(text) {
+  var fb = document.getElementById('clipboardFallback');
+  var fbInput = document.getElementById('fallbackUrl');
+  fbInput.value = text;
+  fb.classList.add('visible');
+  fbInput.select();
+  setTimeout(function() { fb.classList.remove('visible'); }, 10000);
+}
+
+// ============================================================
+// Status bar
+// ============================================================
+function setStatus(msg, isError, durationMs) {
+  statusMsg.textContent = msg || '';
+  statusMsg.classList.toggle('status-bar-error', !!isError);
+  if (durationMs != null && !isError) {
+    statusTime.textContent = Math.round(durationMs) + 'ms';
+  } else if (isError || !msg) {
+    statusTime.textContent = '';
+  }
+  // Show CLI hint after successful conversion
+  if (durationMs != null && !isError) {
+    updateCliHint();
+  } else {
+    cliHint.textContent = '';
+  }
+}
+
+function updateCliHint() {
+  var mode = outputMode.value;
+  var hash = location.hash;
+  var displayHint, fullCommand;
+  if (hash && hash.startsWith('#0:')) {
+    var payload = hash.slice(3);
+    var url = location.origin + '/d/' + payload;
+    fullCommand = 'cm remote --http ' + url;
+    displayHint = 'cm remote --http \u2026';
+  } else {
+    var formatFlag = { preview: 'html', html: 'html', markdown: 'md', text: 'text', json: 'json' };
+    fullCommand = 'cm export --to ' + (formatFlag[mode] || 'html') + ' [file.cm]';
+    displayHint = fullCommand;
+  }
+  cliHint.textContent = displayHint;
+  cliHint.title = 'Click to copy: ' + (fullCommand.length > 80 ? fullCommand.slice(0, 77) + '\u2026' : fullCommand);
+  cliHint.onclick = function() {
+    copyToClipboard(fullCommand);
+  };
+}
+
+// ============================================================
+// Toast
+// ============================================================
+function showToast(msg, type, duration) {
+  toast.textContent = msg;
+  toast.className = 'toast toast-' + type + ' visible';
+  setTimeout(function() { toast.classList.remove('visible'); }, duration);
+}
+
+// ============================================================
+// Compression
+// ============================================================
+async function compressToBase64url(text) {
+  var stream = new Blob([new TextEncoder().encode(text)])
+    .stream().pipeThrough(new CompressionStream('deflate'));
+  var compressed = await new Response(stream).arrayBuffer();
+  return arrayBufferToBase64url(compressed);
+}
+
+async function decompressFromBase64url(encoded) {
+  var bytes = base64urlToArrayBuffer(encoded);
+  var stream = new Blob([bytes])
+    .stream().pipeThrough(new DecompressionStream('deflate'));
+  var reader = stream.getReader();
+  var chunks = [], totalSize = 0, MAX_SIZE = 1 << 20;
+  while (true) {
+    var r = await reader.read();
+    if (r.done) break;
+    totalSize += r.value.byteLength;
+    if (totalSize > MAX_SIZE) { reader.cancel(); throw new Error('too large'); }
+    chunks.push(r.value);
+  }
+  var merged = new Uint8Array(totalSize);
+  var offset = 0;
+  for (var i = 0; i < chunks.length; i++) { merged.set(chunks[i], offset); offset += chunks[i].byteLength; }
+  return new TextDecoder().decode(merged);
+}
+
+function arrayBufferToBase64url(buf) {
+  var bytes = new Uint8Array(buf);
+  var binary = '';
+  for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64urlToArrayBuffer(str) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) str += '=';
+  var binary = atob(str);
+  var bytes = new Uint8Array(binary.length);
+  for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+// ============================================================
+// Load from hash
+// ============================================================
+async function loadFromHash() {
+  var hash = location.hash.slice(1);
+  if (!hash || !hash.startsWith('0:')) return;
+  try {
+    var text = await decompressFromBase64url(hash.slice(2));
+    input.value = text;
+    shareBtn.disabled = false;
+  } catch(e) {
+    showToast('Could not decode shared document', 'error', 3000);
+  }
+}
+
+// ============================================================
+// Examples
+// ============================================================
+var examplesSel = document.getElementById('examples');
+var EXAMPLES_BASE = 'https://raw.githubusercontent.com/CalcMark/go-calcmark/main/testdata/examples/';
+
+examplesSel.addEventListener('change', async function() {
+  var name = examplesSel.value;
+  if (!name) return;
+  try {
+    var res = await fetch(EXAMPLES_BASE + name + '.cm');
+    if (!res.ok) throw new Error();
+    input.value = await res.text();
+    shareBtn.disabled = false;
+    lastRenderedSource = '';
+    lastRawSource = '';
+    renderCurrent();
+    updateHash();
+  } catch(e) {
+    showToast('Could not load example', 'error', 3000);
+  }
+  examplesSel.value = '';
+});
+
+// ============================================================
+// Init
+// ============================================================
+(async function() {
+  await loadFromHash();
+  if (input.value.trim()) {
+    shareBtn.disabled = false;
+    if (location.hash && location.hash.startsWith('#0:')) {
+      cmBtn.style.display = '';
+    }
+    renderCurrent();
+  }
+})();
+</script>
+</body>
+</html>

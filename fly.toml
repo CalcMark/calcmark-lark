@@ -1,0 +1,15 @@
+app = "calcmark-lark"
+primary_region = "ord"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+[[http_service.checks]]
+  grace_period = "5s"
+  interval = "30s"
+  method = "GET"
+  path = "/"
+  timeout = "5s"
