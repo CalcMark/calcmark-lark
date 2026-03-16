@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_PAT }}
 
       - uses: actions/setup-go@v5
         with:
@@ -61,5 +63,3 @@ jobs:
           git add go.mod go.sum
           git commit -m "chore: bump go-calcmark to ${{ steps.validate.outputs.tag }}"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.DEPLOY_PAT }}
