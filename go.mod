@@ -3,7 +3,7 @@ module github.com/CalcMark/calcmark-lark
 go 1.25.0
 
 require (
-	github.com/CalcMark/go-calcmark v1.8.1
+	github.com/CalcMark/go-calcmark v1.8.7
 	golang.org/x/time v0.15.0
 )
 
