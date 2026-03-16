@@ -918,7 +918,6 @@ async function loadExample(name) {
     var res = await fetch(EXAMPLES_BASE + name + '.cm');
     if (!res.ok) throw new Error();
     input.value = await res.text();
-    shareBtn.disabled = false;
     lastRenderedSource = '';
     lastRawSource = '';
     renderCurrent();
@@ -950,7 +949,6 @@ examplesSel.addEventListener('change', async function() {
     await loadFromHash();
   }
   if (input.value.trim()) {
-    shareBtn.disabled = false;
     if (location.hash && location.hash.startsWith('#0:')) {
       cmBtn.style.display = '';
     }
