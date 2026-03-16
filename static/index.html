@@ -169,6 +169,12 @@ main {
   background: var(--color-primary); color: #fff; border-color: var(--color-primary);
 }
 .small-btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.small-btn-copy {
+  font-size: 0.875rem; padding: 2px 8px;
+  color: color-mix(in srgb, var(--color-text) 90%, var(--color-primary));
+  border-color: color-mix(in srgb, var(--color-text) 50%, var(--color-border));
+}
+.small-btn-copy:hover { color: var(--color-primary); border-color: var(--color-primary); }
 .small-btn-cm {
   font-family: var(--font-mono); font-size: 0.625rem; font-weight: 600;
   letter-spacing: 0.03em; opacity: 0.7;
@@ -365,6 +371,7 @@ footer a:hover { color: var(--color-primary); text-decoration: underline; }
           <option value="unit-conversion">Unit Conversion</option>
         </select>
         <div class="panel-spacer"></div>
+        <button id="copySourceBtn" class="small-btn small-btn-copy" onclick="copySource()" title="Copy CalcMark source"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         <button id="shareBtn" class="small-btn small-btn-primary" onclick="share()" disabled><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" shape-rendering="crispEdges" style="vertical-align:-1px;margin-right:4px;"><g fill="#fff"><rect x="9" y="0" width="2" height="1"/><rect x="7" y="1" width="6" height="1"/><rect x="6" y="2" width="8" height="1"/><rect x="6" y="3" width="3" height="1"/><rect x="10" y="3" width="5" height="1"/><rect x="6" y="4" width="9" height="1"/><rect x="8" y="5" width="5" height="1"/><rect x="6" y="6" width="8" height="1"/><rect x="4" y="7" width="2" height="1"/><rect x="8" y="7" width="6" height="1"/><rect x="2" y="8" width="2" height="1"/><rect x="8" y="8" width="5" height="1"/><rect x="2" y="9" width="12" height="1"/><rect x="1" y="10" width="12" height="1"/><rect x="0" y="11" width="12" height="1"/><rect x="0" y="12" width="4" height="1"/><rect x="7" y="12" width="5" height="1"/><rect x="8" y="13" width="3" height="1"/><rect x="8" y="14" width="2" height="1"/><rect x="11" y="14" width="2" height="1"/><rect x="8" y="15" width="3" height="1"/><rect x="11" y="15" width="3" height="1"/></g></svg>Share this lark</button>
         <button id="cmBtn" class="small-btn small-btn-cm" onclick="copyCmCommand()" style="display:none;" title="Copy cm CLI command">cm</button>
       </div>
@@ -477,9 +484,10 @@ var lastRawLocale = '';
 
 input.addEventListener('input', function() {
   var hasContent = input.value.trim().length > 0;
-  shareBtn.disabled = !hasContent;
 
   if (!hasContent) {
+    shareBtn.disabled = true;
+    shareBtn.title = '';
     lastRenderedSource = '';
     lastRawSource = '';
     showPreviewMode();
@@ -573,6 +581,7 @@ async function renderPreview() {
     };
     showPreviewMode();
     setStatus('', false, performance.now() - t0);
+    checkShareability();
   } catch(err) {
     if (err.name === 'AbortError') return;
     setStatus('Network error', true);
@@ -618,6 +627,7 @@ async function renderRaw(format) {
     lastRawLocale = curLocale;
     showRawMode();
     setStatus('', false, performance.now() - t0);
+    checkShareability();
   } catch(e) {
     setStatus('Network error', true);
   }
@@ -676,12 +686,32 @@ async function updateHash() {
 }
 
 function updateShareButton() {
-  var label = canShareUrl ? 'Share this lark' : 'Copy this lark';
-  // Update text node only (preserve the SVG icon)
-  var textNode = shareBtn.lastChild;
-  if (textNode && textNode.nodeType === 3) {
-    textNode.textContent = label;
+  if (canShareUrl) {
+    shareBtn.disabled = false;
+    shareBtn.title = '';
+  } else {
+    shareBtn.disabled = true;
+    shareBtn.title = 'Too big to share. Use the copy button instead.';
   }
+}
+
+// Check if the current input can fit in a shareable URL without modifying the URL bar.
+// Called after every successful render to keep the button state in sync.
+async function checkShareability() {
+  var source = input.value;
+  if (!source.trim()) {
+    canShareUrl = false;
+    updateShareButton();
+    return;
+  }
+  try {
+    var encoded = await compressToBase64url(source);
+    var url = location.origin + '/#0:' + encoded;
+    canShareUrl = url.length <= 2000;
+  } catch(e) {
+    canShareUrl = false;
+  }
+  updateShareButton();
 }
 
 function getCmCommand() {
@@ -701,21 +731,26 @@ function copyCmCommand() {
 // ============================================================
 // Share
 // ============================================================
-function share() {
+async function share() {
   var source = input.value;
-  if (!source.trim()) return;
+  if (!source.trim() || !canShareUrl) return;
 
-  if (canShareUrl) {
-    var hash = location.hash;
-    if (hash && hash.startsWith('#0:')) {
-      var url = location.origin + '/' + hash;
-      copyToClipboard(url);
-      updateCliHint();
-      return;
-    }
+  // Use existing hash if available, otherwise compute it
+  var hash = location.hash;
+  if (!hash || !hash.startsWith('#0:')) {
+    try {
+      var encoded = await compressToBase64url(source);
+      hash = '#0:' + encoded;
+    } catch(e) { return; }
   }
-  // Fallback: copy the raw CalcMark source
-  copyToClipboard(source);
+  var url = location.origin + '/' + hash;
+  copyToClipboard(url);
+  updateCliHint();
+}
+
+function copySource() {
+  var source = input.value;
+  if (source.trim()) copyToClipboard(source);
 }
 
 // ============================================================
