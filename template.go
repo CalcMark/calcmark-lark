@@ -6,5 +6,5 @@ import _ "embed"
 // default blue-themed template. It uses CalcMark design tokens (purple accent,
 // Inter + JetBrains Mono fonts) and supports dark mode via prefers-color-scheme.
 //
-//go:embed lark.html
+//go:embed lark.gohtml
 var larkHTMLTemplate string
