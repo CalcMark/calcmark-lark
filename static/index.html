@@ -646,11 +646,15 @@ function downloadOutput() {
 // ============================================================
 // Hash (live URL update)
 // ============================================================
+var canShareUrl = false;
+
 async function updateHash() {
   var source = input.value;
   if (!source.trim()) {
     history.replaceState(null, '', '/');
     cmBtn.style.display = 'none';
+    canShareUrl = false;
+    updateShareButton();
     return;
   }
   try {
@@ -660,12 +664,24 @@ async function updateHash() {
     if (url.length > 2000) {
       history.replaceState(null, '', '/');
       cmBtn.style.display = 'none';
+      canShareUrl = false;
     } else {
       history.replaceState(null, '', '/#' + fragment);
       cmBtn.style.display = '';
+      canShareUrl = true;
     }
+    updateShareButton();
     updateCliHint();
   } catch(e) { /* ignore */ }
+}
+
+function updateShareButton() {
+  var label = canShareUrl ? 'Share this lark' : 'Copy this lark';
+  // Update text node only (preserve the SVG icon)
+  var textNode = shareBtn.lastChild;
+  if (textNode && textNode.nodeType === 3) {
+    textNode.textContent = label;
+  }
 }
 
 function getCmCommand() {
@@ -689,16 +705,17 @@ function share() {
   var source = input.value;
   if (!source.trim()) return;
 
-  // Hash is kept up-to-date by updateHash() on debounce — just read it
-  var hash = location.hash;
-  if (!hash || !hash.startsWith('#0:')) {
-    showToast('Document too big to share via URL', 'warning', 3000);
-    return;
+  if (canShareUrl) {
+    var hash = location.hash;
+    if (hash && hash.startsWith('#0:')) {
+      var url = location.origin + '/' + hash;
+      copyToClipboard(url);
+      updateCliHint();
+      return;
+    }
   }
-
-  var url = location.origin + '/' + hash;
-  copyToClipboard(url);
-  updateCliHint();
+  // Fallback: copy the raw CalcMark source
+  copyToClipboard(source);
 }
 
 // ============================================================
