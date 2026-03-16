@@ -132,6 +132,20 @@ body {
 .text-block blockquote p {
   margin: 0.5em 0;
 }
+.text-block table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+.text-block th, .text-block td {
+  border: 1px solid var(--color-border);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.text-block th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
 .frontmatter {
   margin-bottom: 2em;
   padding: 1em 1.5em;
