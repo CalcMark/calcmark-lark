@@ -365,7 +365,7 @@ footer a:hover { color: var(--color-primary); text-decoration: underline; }
           <option value="unit-conversion">Unit Conversion</option>
         </select>
         <div class="panel-spacer"></div>
-        <button id="shareBtn" class="small-btn small-btn-primary" onclick="share()" disabled>Share</button>
+        <button id="shareBtn" class="small-btn small-btn-primary" onclick="share()" disabled><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" shape-rendering="crispEdges" style="vertical-align:-1px;margin-right:4px;"><g fill="#fff"><rect x="9" y="0" width="2" height="1"/><rect x="7" y="1" width="6" height="1"/><rect x="6" y="2" width="8" height="1"/><rect x="6" y="3" width="3" height="1"/><rect x="10" y="3" width="5" height="1"/><rect x="6" y="4" width="9" height="1"/><rect x="8" y="5" width="5" height="1"/><rect x="6" y="6" width="8" height="1"/><rect x="4" y="7" width="2" height="1"/><rect x="8" y="7" width="6" height="1"/><rect x="2" y="8" width="2" height="1"/><rect x="8" y="8" width="5" height="1"/><rect x="2" y="9" width="12" height="1"/><rect x="1" y="10" width="12" height="1"/><rect x="0" y="11" width="12" height="1"/><rect x="0" y="12" width="4" height="1"/><rect x="7" y="12" width="5" height="1"/><rect x="8" y="13" width="3" height="1"/><rect x="8" y="14" width="2" height="1"/><rect x="11" y="14" width="2" height="1"/><rect x="8" y="15" width="3" height="1"/><rect x="11" y="15" width="3" height="1"/></g></svg>Share this lark</button>
         <button id="cmBtn" class="small-btn small-btn-cm" onclick="copyCmCommand()" style="display:none;" title="Copy cm CLI command">cm</button>
       </div>
       <textarea id="input" spellcheck="false">price = 100 USD
@@ -387,6 +387,18 @@ total = price + tax</textarea>
           <option value="markdown">Markdown</option>
           <option value="text">Text</option>
           <option value="json">JSON</option>
+        </select>
+        <select id="locale" class="small-select" aria-label="Number locale">
+          <option value="">en-US</option>
+          <option value="de-DE">de-DE</option>
+          <option value="fr-FR">fr-FR</option>
+          <option value="es-ES">es-ES</option>
+          <option value="pt-BR">pt-BR</option>
+          <option value="ja-JP">ja-JP</option>
+          <option value="zh-CN">zh-CN</option>
+          <option value="hi-IN">hi-IN</option>
+          <option value="ar-SA">ar-SA</option>
+          <option value="sv-SE">sv-SE</option>
         </select>
         <div class="panel-spacer"></div>
         <button id="copyBtn" class="small-btn" onclick="copyOutput()" style="display:none;">Copy</button>
@@ -444,6 +456,7 @@ var statusMsg   = document.getElementById('statusMsg');
 var statusTime  = document.getElementById('statusTime');
 var cliHint     = document.getElementById('cliHint');
 var outputMode  = document.getElementById('outputMode');
+var localeSel   = document.getElementById('locale');
 var previewEl   = document.getElementById('preview');
 var rawOutput   = document.getElementById('rawOutput');
 var copyBtn     = document.getElementById('copyBtn');
@@ -460,6 +473,7 @@ var currentController = null;
 var lastRenderedSource = '';
 var lastRawSource = '';   // track what raw export was fetched for
 var lastRawFormat = '';
+var lastRawLocale = '';
 
 input.addEventListener('input', function() {
   var hasContent = input.value.trim().length > 0;
@@ -482,10 +496,22 @@ input.addEventListener('input', function() {
   }, DEBOUNCE_MS);
 });
 
-// Re-render when output mode changes
+// Re-render when output mode or locale changes
 outputMode.addEventListener('change', function() {
   renderCurrent();
 });
+localeSel.addEventListener('change', function() {
+  lastRenderedSource = '';
+  lastRawSource = '';
+  renderCurrent();
+});
+
+function convertUrl(format) {
+  var url = '/api/convert?format=' + format;
+  var locale = localeSel.value;
+  if (locale) url += '&locale=' + locale;
+  return url;
+}
 
 // ============================================================
 // Render based on current mode
@@ -528,7 +554,7 @@ async function renderPreview() {
   var t0 = performance.now();
 
   try {
-    var res = await fetch('/api/convert?format=html', {
+    var res = await fetch(convertUrl('html'), {
       method: 'POST', body: source, signal: currentController.signal,
     });
     if (!res.ok) {
@@ -562,14 +588,15 @@ async function renderRaw(format) {
   var source = input.value;
   if (!source.trim()) return;
 
-  // Use cached result if source + format haven't changed and we have content
-  if (lastRawSource && source === lastRawSource && format === lastRawFormat) { showRawMode(); return; }
+  // Use cached result if source + format + locale haven't changed and we have content
+  var curLocale = localeSel.value;
+  if (lastRawSource && source === lastRawSource && format === lastRawFormat && curLocale === lastRawLocale) { showRawMode(); return; }
 
   setStatus('Converting\u2026');
   var t0 = performance.now();
 
   try {
-    var res = await fetch('/api/convert?format=' + format, {
+    var res = await fetch(convertUrl(format), {
       method: 'POST', body: source,
     });
     if (!res.ok) {
@@ -579,6 +606,7 @@ async function renderRaw(format) {
       rawOutput.classList.add('raw-error');
       lastRawSource = '';
       lastRawFormat = '';
+      lastRawLocale = '';
       showRawMode();
       setStatus(errMsg, true);
       return;
@@ -587,6 +615,7 @@ async function renderRaw(format) {
     rawOutput.classList.remove('raw-error');
     lastRawSource = source;
     lastRawFormat = format;
+    lastRawLocale = curLocale;
     showRawMode();
     setStatus('', false, performance.now() - t0);
   } catch(e) {
@@ -620,19 +649,19 @@ function downloadOutput() {
 async function updateHash() {
   var source = input.value;
   if (!source.trim()) {
-    history.replaceState(null, '', location.pathname);
+    history.replaceState(null, '', '/');
     cmBtn.style.display = 'none';
     return;
   }
   try {
     var encoded = await compressToBase64url(source);
     var fragment = '0:' + encoded;
-    var url = location.origin + location.pathname + '#' + fragment;
+    var url = location.origin + '/#' + fragment;
     if (url.length > 2000) {
-      history.replaceState(null, '', location.pathname);
+      history.replaceState(null, '', '/');
       cmBtn.style.display = 'none';
     } else {
-      history.replaceState(null, '', '#' + fragment);
+      history.replaceState(null, '', '/#' + fragment);
       cmBtn.style.display = '';
     }
     updateCliHint();
@@ -667,7 +696,7 @@ function share() {
     return;
   }
 
-  var url = location.origin + location.pathname + hash;
+  var url = location.origin + '/' + hash;
   copyToClipboard(url);
   updateCliHint();
 }
