@@ -178,6 +178,18 @@ body {
   border-top: 1px solid var(--color-border);
   margin: 0.75em 0;
 }
+.frontmatter-value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--color-code-text);
+}
+.frontmatter .extra dt::before {
+  content: "";
+}
+.frontmatter .extra dt {
+  color: var(--color-text-muted);
+}
 </style>
 </head>
 <body>
@@ -199,6 +211,23 @@ body {
     {{range .Frontmatter.Exchange}}
     <dt>{{.From}} → {{.To}}</dt>
     <dd>{{.Rate}}</dd>
+    {{end}}
+  </dl>
+  {{end}}
+  {{if .Frontmatter.Scale}}
+  <h3>Scale</h3>
+  <p class="frontmatter-value">{{.Frontmatter.Scale}}</p>
+  {{end}}
+  {{if .Frontmatter.ConvertTo}}
+  <h3>Convert To</h3>
+  <p class="frontmatter-value">{{.Frontmatter.ConvertTo}}</p>
+  {{end}}
+  {{if .Frontmatter.Extra}}
+  <hr>
+  <dl class="extra">
+    {{range .Frontmatter.Extra}}
+    <dt>{{.Key}}</dt>
+    <dd>{{.Value}}</dd>
     {{end}}
   </dl>
   {{end}}
