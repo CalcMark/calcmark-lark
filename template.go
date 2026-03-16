@@ -123,6 +123,15 @@ body {
   background: none;
   padding: 0;
 }
+.text-block blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--color-text-muted);
+}
+.text-block blockquote p {
+  margin: 0.5em 0;
+}
 .frontmatter {
   margin-bottom: 2em;
   padding: 1em 1.5em;
