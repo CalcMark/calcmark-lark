@@ -1,0 +1,65 @@
+name: Update go-calcmark
+
+on:
+  repository_dispatch:
+    types: [go-calcmark-release]
+
+concurrency:
+  group: upstream-release
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Validate tag format
+        id: validate
+        run: |
+          TAG="${{ github.event.client_payload.tag }}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Skipping non-stable release: $TAG"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update go-calcmark
+        if: steps.validate.outputs.skip != 'true'
+        run: |
+          go get "github.com/CalcMark/go-calcmark@${{ steps.validate.outputs.tag }}"
+          go mod tidy
+
+      - name: Install Task
+        if: steps.validate.outputs.skip != 'true'
+        uses: arduino/setup-task@v2
+
+      - name: Validate build
+        if: steps.validate.outputs.skip != 'true'
+        run: task release
+
+      - name: Check for changes
+        if: steps.validate.outputs.skip != 'true'
+        id: diff
+        run: |
+          if git diff --quiet go.mod go.sum; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to go.mod or go.sum"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.validate.outputs.skip != 'true' && steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add go.mod go.sum
+          git commit -m "chore: bump go-calcmark to ${{ steps.validate.outputs.tag }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_PAT }}
