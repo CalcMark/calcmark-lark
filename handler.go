@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/CalcMark/go-calcmark/format"
+	"github.com/CalcMark/go-calcmark/format/display"
 	impldoc "github.com/CalcMark/go-calcmark/impl/document"
 	"github.com/CalcMark/go-calcmark/spec/document"
 )
@@ -80,9 +81,20 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Locale
+	locale := r.URL.Query().Get("locale")
+	opts := format.Options{}
+	if locale != "" {
+		cfg, err := display.NewConfig(locale)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid locale: "+locale)
+			return
+		}
+		opts.DisplayFormatter = display.NewFormatter(cfg)
+	}
+
 	// Format output
 	formatter := format.GetFormatter(internalFormat, "")
-	opts := format.Options{}
 	if internalFormat == "html" {
 		opts.Template = larkHTMLTemplate
 	}
