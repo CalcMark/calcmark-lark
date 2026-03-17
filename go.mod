@@ -1,9 +1,9 @@
 module github.com/CalcMark/calcmark-lark
 
-go 1.25.0
+go 1.25.1
 
 require (
-	github.com/CalcMark/go-calcmark v1.8.11
+	github.com/CalcMark/go-calcmark v1.8.12
 	golang.org/x/time v0.15.0
 )
 
