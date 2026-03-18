@@ -583,10 +583,14 @@ function getCursorPercent() {
 }
 
 function syncScrollToPercent(percent) {
-  var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-  if (maxScroll > 0) {
-    window.scrollTo(0, Math.round(maxScroll * percent));
-  }
+  try {
+    var doc = previewEl.contentDocument;
+    if (!doc || !doc.body) return;
+    var maxScroll = doc.body.scrollHeight - previewEl.clientHeight;
+    if (maxScroll > 0) {
+      doc.documentElement.scrollTop = Math.round(maxScroll * percent);
+    }
+  } catch(e) {}
 }
 
 async function renderPreview() {
@@ -626,10 +630,6 @@ async function renderPreview() {
     previewEl.onload = function() {
       if (thisGeneration !== renderGeneration) return;
       clearTimeout(revealTimeout);
-      try {
-        var body = previewEl.contentDocument.body;
-        if (body) previewEl.style.height = body.scrollHeight + 32 + 'px';
-      } catch(e) {}
       syncScrollToPercent(scrollPercent);
       previewEl.style.visibility = '';
       showPreviewMode();
@@ -959,6 +959,7 @@ async function loadFromHash() {
   try {
     var text = await decompressFromBase64url(hash.slice(2));
     input.value = text;
+    input.selectionStart = input.selectionEnd = 0;
     shareBtn.disabled = false;
   } catch(e) {
     showToast('Could not decode shared document', 'error', 3000);
@@ -976,6 +977,7 @@ async function loadExample(name) {
     var res = await fetch(EXAMPLES_BASE + name + '.cm');
     if (!res.ok) throw new Error();
     input.value = await res.text();
+    input.selectionStart = input.selectionEnd = 0;
     lastRenderedSource = '';
     lastRawSource = '';
     renderCurrent();
