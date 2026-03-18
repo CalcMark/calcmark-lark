@@ -1,7 +1,7 @@
 ---
 title: "fix: Sync preview scroll position to editor cursor and eliminate re-render flash"
 type: fix
-status: active
+status: completed
 date: 2026-03-18
 ---
 
