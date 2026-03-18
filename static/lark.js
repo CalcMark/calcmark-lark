@@ -6,11 +6,24 @@
 // Theme
 // ------------------------------------------------------------
 
+function syncPreviewTheme() {
+  try {
+    const theme = document.documentElement.getAttribute('data-theme');
+    const doc = document.getElementById('preview')?.contentDocument;
+    if (doc?.documentElement) {
+      doc.documentElement.setAttribute('data-theme', theme);
+    }
+  } catch {
+    // cross-origin or detached document
+  }
+}
+
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
+  syncPreviewTheme();
 }
 
 // ------------------------------------------------------------
@@ -371,6 +384,8 @@ function writeToPreview(html, scrollPercent) {
   doc.open();
   doc.write(html);
   doc.close();
+
+  syncPreviewTheme();
 
   const maxScroll = doc.documentElement.scrollHeight - previewEl.clientHeight;
   if (maxScroll > 0) {
