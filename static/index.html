@@ -505,6 +505,7 @@ var lastRenderedSource = '';
 var lastRawSource = '';   // track what raw export was fetched for
 var lastRawFormat = '';
 var lastRawLocale = '';
+var renderGeneration = 0;
 
 input.addEventListener('input', function() {
   var hasContent = input.value.trim().length > 0;
@@ -596,6 +597,7 @@ async function renderPreview() {
   if (currentController) currentController.abort();
   currentController = new AbortController();
 
+  var thisGeneration = ++renderGeneration;
   var scrollPercent = getCursorPercent();
   setStatus('Rendering\u2026');
   var t0 = performance.now();
@@ -609,20 +611,29 @@ async function renderPreview() {
       setStatus(err.error || 'Error', true);
       return;
     }
+    if (thisGeneration !== renderGeneration) return;
     var html = await res.text();
     lastRenderedSource = source;
 
     previewEl.style.visibility = 'hidden';
     previewEl.srcdoc = html;
+
+    var revealTimeout = setTimeout(function() {
+      previewEl.style.visibility = '';
+      showPreviewMode();
+    }, 3000);
+
     previewEl.onload = function() {
+      if (thisGeneration !== renderGeneration) return;
+      clearTimeout(revealTimeout);
       try {
         var body = previewEl.contentDocument.body;
         if (body) previewEl.style.height = body.scrollHeight + 32 + 'px';
       } catch(e) {}
       syncScrollToPercent(scrollPercent);
       previewEl.style.visibility = '';
+      showPreviewMode();
     };
-    showPreviewMode();
     setStatus('', false, performance.now() - t0);
     checkShareability();
   } catch(err) {
