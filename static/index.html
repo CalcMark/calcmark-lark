@@ -574,6 +574,20 @@ function showRawMode() {
   downloadBtn.style.display = '';
 }
 
+function getCursorPercent() {
+  var pos = input.selectionStart;
+  var total = input.value.length;
+  if (total === 0) return 0;
+  return pos / total;
+}
+
+function syncScrollToPercent(percent) {
+  var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  if (maxScroll > 0) {
+    window.scrollTo(0, Math.round(maxScroll * percent));
+  }
+}
+
 async function renderPreview() {
   var source = input.value;
   if (!source.trim()) return;
@@ -582,6 +596,7 @@ async function renderPreview() {
   if (currentController) currentController.abort();
   currentController = new AbortController();
 
+  var scrollPercent = getCursorPercent();
   setStatus('Rendering\u2026');
   var t0 = performance.now();
 
@@ -596,12 +611,16 @@ async function renderPreview() {
     }
     var html = await res.text();
     lastRenderedSource = source;
+
+    previewEl.style.visibility = 'hidden';
     previewEl.srcdoc = html;
     previewEl.onload = function() {
       try {
         var body = previewEl.contentDocument.body;
         if (body) previewEl.style.height = body.scrollHeight + 32 + 'px';
       } catch(e) {}
+      syncScrollToPercent(scrollPercent);
+      previewEl.style.visibility = '';
     };
     showPreviewMode();
     setStatus('', false, performance.now() - t0);
