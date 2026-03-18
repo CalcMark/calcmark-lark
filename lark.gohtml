@@ -21,7 +21,7 @@
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, "SF Mono", Monaco, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-primary: #a371f7;
     --color-text: #e5e5e5;
     --color-text-muted: #8b949e;
@@ -34,6 +34,19 @@
     --color-error: #f85149;
     --color-error-bg: #3d1417;
   }
+}
+[data-theme="dark"] {
+  --color-primary: #a371f7;
+  --color-text: #e5e5e5;
+  --color-text-muted: #8b949e;
+  --color-bg: #0d1117;
+  --color-bg-subtle: #161b22;
+  --color-bg-inset: #1c2128;
+  --color-border: #30363d;
+  --color-code-bg: #161b22;
+  --color-code-text: #e5e5e5;
+  --color-error: #f85149;
+  --color-error-bg: #3d1417;
 }
 body {
   font-family: var(--font-sans);
