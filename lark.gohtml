@@ -170,6 +170,21 @@ body {
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
+/* CalcMark evaluated blocks: purple left accent, normal text color */
+.embedded-content pre:has(code.language-calcmark),
+.embedded-content pre:has(code.language-cm) {
+  background: var(--color-bg-subtle);
+  border-left: 4px solid var(--color-primary);
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.embedded-content code.language-calcmark,
+.embedded-content code.language-cm {
+  color: var(--color-code-text);
+  font-weight: 400;
+}
+/* Regular code blocks */
 .embedded-content pre {
   background: var(--color-code-bg);
   padding: 1em;
