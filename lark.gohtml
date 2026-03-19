@@ -154,6 +154,64 @@ body {
   background: var(--color-bg-subtle);
   font-weight: 600;
 }
+/* Embedded mode: goldmark-rendered HTML content */
+.embedded-content p {
+  margin: 0.75em 0;
+}
+.embedded-content h1, .embedded-content h2, .embedded-content h3,
+.embedded-content h4, .embedded-content h5, .embedded-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.embedded-content code {
+  background: var(--color-code-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.embedded-content pre {
+  background: var(--color-code-bg);
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.embedded-content pre code {
+  background: none;
+  padding: 0;
+}
+.embedded-content blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--color-text-muted);
+}
+.embedded-content blockquote p {
+  margin: 0.5em 0;
+}
+.embedded-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+.embedded-content th, .embedded-content td {
+  border: 1px solid var(--color-border);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.embedded-content th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+.embedded-content img {
+  max-width: 100%;
+  height: auto;
+}
+.embedded-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2em 0;
+}
 .frontmatter {
   margin-bottom: 2em;
   padding: 1em 1.5em;
@@ -215,6 +273,9 @@ body {
 </style>
 </head>
 <body>
+{{if .Content}}
+<div class="embedded-content">{{.Content}}</div>
+{{else}}
 {{if .Frontmatter}}
 <div class="frontmatter">
   {{if .Frontmatter.Globals}}
@@ -272,6 +333,7 @@ body {
 </div>
 {{else}}
 <div class="text-block">{{.HTML}}</div>
+{{end}}
 {{end}}
 {{end}}
 </body>
