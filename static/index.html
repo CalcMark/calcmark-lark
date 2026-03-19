@@ -209,6 +209,24 @@ main {
 .info-popover p { margin-bottom: 8px; }
 .info-popover p:last-child { margin-bottom: 0; }
 
+/* === Mode toggle === */
+.mode-toggle {
+  display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.mode-btn {
+  padding: 4px 10px; font-size: 0.75rem; font-weight: 500;
+  font-family: var(--font-sans);
+  background: var(--color-bg-subtle); color: var(--color-text-muted);
+  border: none; cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.mode-btn:not(:last-child) { border-right: 1px solid var(--color-border); }
+.mode-btn:hover { color: var(--color-text); }
+.mode-btn.active {
+  background: var(--color-primary); color: #fff;
+}
+
 /* === Textarea === */
 #input {
   width: 100%; flex: 1; min-height: 200px;
@@ -370,26 +388,35 @@ footer a:hover { color: var(--color-primary); text-decoration: underline; }
     <div class="col">
       <div class="panel-header">
         <span class="panel-label">Document</span>
+        <div class="mode-toggle" id="modeToggle" role="radiogroup" aria-label="Input mode">
+          <button class="mode-btn active" data-mode="cm" aria-pressed="true">CalcMark</button>
+          <button class="mode-btn" data-mode="embedded" aria-pressed="false">Embedded</button>
+        </div>
         <select id="examples" class="small-select" aria-label="Load example">
           <option value="">Load example&hellip;</option>
-          <option value="budget">Budget</option>
-          <option value="datacenter-cost">Datacenter Cost</option>
-          <option value="engineering">Engineering</option>
-          <option value="hero-demo">Hero Demo</option>
-          <option value="home-renovation">Home Renovation</option>
-          <option value="household-budget">Household Budget</option>
-          <option value="investment-growth">Investment Growth</option>
-          <option value="job-offer">Job Offer Comparison</option>
-          <option value="markdown-showcase">Markdown Showcase</option>
-          <option value="markdown_engineering">Markdown: Engineering</option>
-          <option value="markdown_financial">Markdown: Financial</option>
-          <option value="markdown_scientific">Markdown: Scientific</option>
-          <option value="project-workback">Project Workback</option>
-          <option value="recipe-scaling">Recipe Scaling</option>
-          <option value="services-pl">Services P&amp;L</option>
-          <option value="system-sizing">System Sizing</option>
-          <option value="transform-indicators">Transform Indicators</option>
-          <option value="unit-conversion">Unit Conversion</option>
+          <optgroup label="CalcMark">
+            <option value="budget">Budget</option>
+            <option value="datacenter-cost">Datacenter Cost</option>
+            <option value="engineering">Engineering</option>
+            <option value="hero-demo">Hero Demo</option>
+            <option value="home-renovation">Home Renovation</option>
+            <option value="household-budget">Household Budget</option>
+            <option value="investment-growth">Investment Growth</option>
+            <option value="job-offer">Job Offer Comparison</option>
+            <option value="markdown-showcase">Markdown Showcase</option>
+            <option value="markdown_engineering">Markdown: Engineering</option>
+            <option value="markdown_financial">Markdown: Financial</option>
+            <option value="markdown_scientific">Markdown: Scientific</option>
+            <option value="project-workback">Project Workback</option>
+            <option value="recipe-scaling">Recipe Scaling</option>
+            <option value="services-pl">Services P&amp;L</option>
+            <option value="system-sizing">System Sizing</option>
+            <option value="transform-indicators">Transform Indicators</option>
+            <option value="unit-conversion">Unit Conversion</option>
+          </optgroup>
+          <optgroup label="Embedded">
+            <option value="embedded-datacenter-cost" data-ext="md">Datacenter Cost Analysis</option>
+          </optgroup>
         </select>
         <div class="panel-spacer"></div>
         <button id="copySourceBtn" class="small-btn small-btn-copy" onclick="copySource()" title="Copy CalcMark source"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
