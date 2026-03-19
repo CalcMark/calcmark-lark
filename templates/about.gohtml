@@ -34,8 +34,8 @@ li { margin-bottom: 0.35em; }
   <h2>Two modes</h2>
   <p>Lark automatically detects which mode to use based on your input:</p>
   <ul>
-    <li><strong>CalcMark</strong> &mdash; the entire document is CalcMark. Write expressions like <code>price = 100 USD</code> and see results instantly.</li>
-    <li><strong>Markdown</strong> &mdash; write standard Markdown with CalcMark fenced code blocks (<code>```cm</code> or <code>```calcmark</code>). The prose renders as rich HTML and each CalcMark block is evaluated inline. Detected automatically when your input contains these fences.</li>
+    <li><strong>CalcMark</strong> (<code>.cm</code>) &mdash; the entire document is a single CalcMark program. Variables, frontmatter (<code>@locale</code>, exchange rates, <code>@scale</code>), and markdown prose all share one scope. Define something at the top, reference it anywhere below. Best for focused calculations like budgets, cost models, and unit conversions.</li>
+    <li><strong>Markdown</strong> (<code>.md</code>) &mdash; a standard Markdown document with CalcMark fenced code blocks (<code>```cm</code> or <code>```calcmark</code>). The prose renders as rich HTML. Each CalcMark block is evaluated independently &mdash; variables from one block are not visible in another. Best for reports and articles where calculations are embedded in longer prose. Detected automatically when your input contains these fences.</li>
   </ul>
 
   <h2>Sharing</h2>
@@ -45,7 +45,7 @@ li { margin-bottom: 0.35em; }
   <p>Use the output dropdown to switch between Preview (rendered HTML), raw HTML source, Markdown, plain Text, or JSON. In Markdown mode, Text and JSON are not available.</p>
 
   <h2>CLI</h2>
-  <p>CalcMark has a command-line tool, <code>cm</code>. Install from <a href="https://github.com/CalcMark/go-calcmark">GitHub</a>.</p>
+  <p>CalcMark has a command-line tool, <code>cm</code>. Visit <a href="https://calcmark.org/docs/getting-started/">calcmark.org</a> for install instructions.</p>
   <pre><code>cm convert budget.cm --to html        # CalcMark to HTML
 cm convert report.md --embedded        # Markdown with CalcMark blocks
 cm watch budget.cm                     # Live preview in browser
