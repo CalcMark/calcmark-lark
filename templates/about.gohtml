@@ -1,0 +1,62 @@
+{{define "title"}}About - CalcMark Lark{{end}}
+
+{{define "styles"}}
+main {
+  max-width: 720px; width: 100%; margin: 0 auto; padding: 32px 16px; flex: 1;
+}
+h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5em; letter-spacing: -0.02em; }
+h2 { font-size: 1.125rem; font-weight: 600; margin-top: 2em; margin-bottom: 0.5em; }
+p { margin-bottom: 1em; color: var(--color-text-muted); }
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code {
+  background: var(--color-code-bg); color: var(--color-code-text);
+  padding: 0.15em 0.4em; border-radius: 3px;
+  font-family: var(--font-mono); font-size: 0.875em;
+}
+pre {
+  background: var(--color-code-bg); padding: 1em;
+  border-radius: var(--radius-md); overflow-x: auto; margin-bottom: 1em;
+}
+pre code { background: none; padding: 0; }
+ul { margin-bottom: 1em; padding-left: 1.5em; color: var(--color-text-muted); }
+li { margin-bottom: 0.35em; }
+@media (min-width: 768px) {
+  main { padding: 48px 24px; }
+}
+{{end}}
+
+{{define "content"}}
+<main>
+  <h1>About CalcMark Lark</h1>
+  <p>Lark is a live playground for <a href="https://calcmark.org">CalcMark</a> &mdash; a calculation-oriented markup language that blends prose and math in one document.</p>
+
+  <h2>Two modes</h2>
+  <p>Lark automatically detects which mode to use based on your input:</p>
+  <ul>
+    <li><strong>CalcMark</strong> &mdash; the entire document is CalcMark. Write expressions like <code>price = 100 USD</code> and see results instantly.</li>
+    <li><strong>Markdown</strong> &mdash; write standard Markdown with CalcMark fenced code blocks (<code>```cm</code> or <code>```calcmark</code>). The prose renders as rich HTML and each CalcMark block is evaluated inline. Detected automatically when your input contains these fences.</li>
+  </ul>
+
+  <h2>Sharing</h2>
+  <p>Click <strong>Share</strong> to copy a URL containing your entire document, compressed into the URL fragment. No server storage &mdash; the document lives in the link. Documents over ~2KB may be too large to share this way; use the copy button instead.</p>
+
+  <h2>Output formats</h2>
+  <p>Use the output dropdown to switch between Preview (rendered HTML), raw HTML source, Markdown, plain Text, or JSON. In Markdown mode, Text and JSON are not available.</p>
+
+  <h2>CLI</h2>
+  <p>CalcMark has a command-line tool, <code>cm</code>. Install from <a href="https://github.com/CalcMark/go-calcmark">GitHub</a>.</p>
+  <pre><code>cm convert budget.cm --to html        # CalcMark to HTML
+cm convert report.md --embedded        # Markdown with CalcMark blocks
+cm watch budget.cm                     # Live preview in browser
+cm watch report.md                     # Embedded mode live preview</code></pre>
+
+  <h2>Links</h2>
+  <ul>
+    <li><a href="https://calcmark.org">calcmark.org</a> &mdash; language documentation</li>
+    <li><a href="https://calcmark.org/docs/">Docs</a> &mdash; user guide and reference</li>
+    <li><a href="https://github.com/CalcMark/go-calcmark">go-calcmark</a> &mdash; interpreter and CLI</li>
+    <li><a href="https://github.com/CalcMark/calcmark-lark">calcmark-lark</a> &mdash; this web app (source)</li>
+  </ul>
+</main>
+{{end}}

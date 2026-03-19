@@ -27,20 +27,6 @@ function toggleTheme() {
 }
 
 // ------------------------------------------------------------
-// Info popover
-// ------------------------------------------------------------
-
-function toggleInfo() {
-  document.getElementById('infoPopover').classList.toggle('visible');
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.info-wrap')) {
-    document.getElementById('infoPopover').classList.remove('visible');
-  }
-});
-
-// ------------------------------------------------------------
 // DOM references
 // ------------------------------------------------------------
 
@@ -60,22 +46,27 @@ const toastEl     = document.getElementById('toast');
 const examplesSel = document.getElementById('examples');
 
 // ------------------------------------------------------------
-// Mode toggle
+// Mode auto-detection
 // ------------------------------------------------------------
 
-const modeToggle = document.getElementById('modeToggle');
 let currentMode = 'cm'; // 'cm' or 'embedded'
 
-function setMode(mode) {
-  if (mode === currentMode) return;
+// Detect embedded mode from content: if the input contains a ```cm or ```calcmark
+// fenced code block, it's embedded mode (Markdown with CalcMark blocks).
+const embeddedPattern = /^[ ]{0,3}(`{3,}|~{3,})\s*(cm|calcmark)\b/m;
+
+function detectMode(source) {
+  return embeddedPattern.test(source) ? 'embedded' : 'cm';
+}
+
+function applyMode(mode) {
   currentMode = mode;
 
-  // Update toggle UI
-  modeToggle.querySelectorAll('.mode-btn').forEach(btn => {
-    const isActive = btn.dataset.mode === mode;
-    btn.classList.toggle('active', isActive);
-    btn.setAttribute('aria-pressed', isActive);
-  });
+  // Update mode indicator in status bar
+  const modeLabel = document.getElementById('modeLabel');
+  if (modeLabel) {
+    modeLabel.textContent = mode === 'embedded' ? 'mode: markdown' : 'mode: calcmark';
+  }
 
   // In embedded mode, hide Text and JSON output options
   const textOpt = outputMode.querySelector('option[value="text"]');
@@ -83,7 +74,6 @@ function setMode(mode) {
   if (mode === 'embedded') {
     textOpt.disabled = true;
     jsonOpt.disabled = true;
-    // If currently viewing a disabled format, switch to preview
     if (outputMode.value === 'text' || outputMode.value === 'json') {
       outputMode.value = 'preview';
     }
@@ -92,19 +82,7 @@ function setMode(mode) {
     textOpt.disabled = false;
     jsonOpt.disabled = false;
   }
-
-  // Invalidate caches and re-render
-  lastRenderedSource = '';
-  lastRenderedMode = '';
-  lastRawSource = '';
-  renderCurrent();
-  updateHash();
 }
-
-modeToggle.addEventListener('click', (e) => {
-  const btn = e.target.closest('.mode-btn');
-  if (btn) setMode(btn.dataset.mode);
-});
 
 // ------------------------------------------------------------
 // Render state
@@ -198,17 +176,16 @@ function setStatus(msg, isError, durationMs) {
 }
 
 function updateCliHint() {
-  // No CLI hint for embedded mode (cm CLI doesn't support /d/ for embedded)
-  if (currentMode === 'embedded') {
-    cliHint.textContent = '';
-    return;
-  }
-
   const mode = outputMode.value;
   const hash = location.hash;
   let displayHint, fullCommand;
 
-  if (hash && hash.startsWith('#0:')) {
+  if (currentMode === 'embedded') {
+    const formatFlag = { preview: 'html', html: 'html', markdown: 'md' };
+    const fmt = formatFlag[mode] || 'html';
+    fullCommand = `cm convert --embedded --to ${fmt} [file.md]`;
+    displayHint = fullCommand;
+  } else if (hash && hash.startsWith('#0:')) {
     const payload = hash.slice(3);
     const url = `${location.origin}/d/${payload}`;
     fullCommand = `cm remote --http ${url}`;
@@ -363,7 +340,6 @@ async function share() {
     }
   }
   copyToClipboard(`${location.origin}/${hash}`);
-  updateCliHint();
 }
 
 function copySource() {
@@ -462,6 +438,9 @@ function convertUrl(format) {
 }
 
 function renderCurrent() {
+  // Auto-detect mode from content on each render
+  applyMode(detectMode(inputEl.value));
+
   const mode = outputMode.value;
   if (mode === 'preview') {
     renderPreview();
@@ -635,7 +614,9 @@ async function loadFromHash() {
     inputEl.value = text;
     inputEl.selectionStart = inputEl.selectionEnd = 0;
     shareBtn.disabled = false;
-    if (mode !== currentMode) setMode(mode);
+    // Mode from hash prefix overrides auto-detection for shared URLs
+    // (compressed content can't be scanned without decompressing)
+    currentMode = mode;
   } catch {
     showToast('Could not decode shared document', 'error', 3000);
   }
@@ -655,11 +636,6 @@ async function loadExample(name, ext) {
     lastRenderedSource = '';
     lastRenderedMode = '';
     lastRawSource = '';
-
-    // Auto-switch mode based on file type
-    const newMode = ext === 'md' ? 'embedded' : 'cm';
-    if (newMode !== currentMode) setMode(newMode);
-
     renderCurrent();
     history.replaceState(null, '', `/x/${name}`);
     cmBtn.style.display = 'none';

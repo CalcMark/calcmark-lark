@@ -39,16 +39,32 @@ func main() {
 	// Document endpoint: GET /d/<payload> returns raw CalcMark source
 	mux.HandleFunc("/d/", handleDocument)
 
-	// Example endpoint: GET /x/<name> serves the frontend (JS loads the example)
+	// Static assets (JS, images)
 	sub, _ := fs.Sub(staticFS, "static")
 	fileServer := http.FileServer(http.FS(sub))
-	mux.HandleFunc("/x/", func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = "/"
+
+	// Pages served from Go templates (shared layout)
+	servePage := func(name string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(getPage(name)))
+		}
+	}
+
+	// Example endpoint: GET /x/<name> serves the index page (JS loads the example)
+	mux.HandleFunc("/x/", servePage("index"))
+
+	// About page
+	mux.HandleFunc("/about", servePage("about"))
+
+	// Root: serve index page for /, static files for everything else
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			servePage("index")(w, r)
+			return
+		}
 		fileServer.ServeHTTP(w, r)
 	})
-
-	// Static frontend
-	mux.Handle("/", fileServer)
 
 	log.Printf("CalcMark Lark listening on :%s", *port)
 	if debug {
