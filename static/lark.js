@@ -269,8 +269,9 @@ function base64urlToArrayBuffer(str) {
 
 async function updateHash() {
   const source = inputEl.value;
+  const qs = location.search;
   if (!source.trim()) {
-    history.replaceState(null, '', '/');
+    history.replaceState(null, '', '/' + qs);
     cmBtn.style.display = 'none';
     canShareUrl = false;
     updateShareButton();
@@ -280,13 +281,13 @@ async function updateHash() {
     const encoded = await compressToBase64url(source);
     const prefix = currentMode === 'embedded' ? '1' : '0';
     const fragment = `${prefix}:${encoded}`;
-    const url = `${location.origin}/#${fragment}`;
+    const url = `${location.origin}/${qs}#${fragment}`;
     if (url.length > 2000) {
-      history.replaceState(null, '', '/');
+      history.replaceState(null, '', '/' + qs);
       cmBtn.style.display = 'none';
       canShareUrl = false;
     } else {
-      history.replaceState(null, '', `/#${fragment}`);
+      history.replaceState(null, '', `/${qs}#${fragment}`);
       // cm CLI button only for cm mode (embedded not supported by /d/ endpoint)
       cmBtn.style.display = currentMode === 'cm' ? '' : 'none';
       canShareUrl = true;
@@ -570,7 +571,7 @@ inputEl.addEventListener('input', () => {
     lastRawSource = '';
     showPreviewMode();
     writeToPreview('', 0);
-    history.replaceState(null, '', location.pathname);
+    history.replaceState(null, '', location.pathname + location.search);
     cliHint.textContent = '';
     return;
   }
@@ -582,11 +583,27 @@ inputEl.addEventListener('input', () => {
   }, DEBOUNCE_MS);
 });
 
-outputMode.addEventListener('change', () => renderCurrent());
+// Sync format/locale into URL query string without replacing path or hash.
+function syncQueryParams() {
+  const params = new URLSearchParams(location.search);
+  const fmt = outputMode.value;
+  if (fmt && fmt !== 'preview') { params.set('format', fmt); } else { params.delete('format'); }
+  const loc = localeSel.value;
+  if (loc) { params.set('locale', loc); } else { params.delete('locale'); }
+  const qs = params.toString();
+  const url = location.pathname + (qs ? `?${qs}` : '') + location.hash;
+  history.replaceState(null, '', url);
+}
+
+outputMode.addEventListener('change', () => {
+  syncQueryParams();
+  renderCurrent();
+});
 
 localeSel.addEventListener('change', () => {
   lastRenderedSource = '';
   lastRawSource = '';
+  syncQueryParams();
   renderCurrent();
 });
 
@@ -646,7 +663,7 @@ async function loadExample(name, ext) {
     lastRenderedMode = '';
     lastRawSource = '';
     renderCurrent();
-    history.replaceState(null, '', `/x/${name}`);
+    history.replaceState(null, '', `/x/${name}${location.search}`);
     cmBtn.style.display = 'none';
     cliHint.textContent = '';
   } catch {
@@ -668,6 +685,17 @@ examplesSel.addEventListener('change', async () => {
 // ------------------------------------------------------------
 
 (async () => {
+  // Apply URL query parameters (?format=...&locale=...)
+  const params = new URLSearchParams(location.search);
+  const paramFormat = params.get('format');
+  const paramLocale = params.get('locale');
+  if (paramFormat && outputMode.querySelector(`option[value="${paramFormat}"]`)) {
+    outputMode.value = paramFormat;
+  }
+  if (paramLocale && localeSel.querySelector(`option[value="${paramLocale}"]`)) {
+    localeSel.value = paramLocale;
+  }
+
   const xMatch = location.pathname.match(/^\/x\/(.+)$/);
   if (xMatch) {
     await loadExample(xMatch[1]);
