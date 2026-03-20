@@ -52,7 +52,7 @@ body {
   font-family: var(--font-sans);
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0.5rem 2rem;
   line-height: 1.6;
   color: var(--color-text);
   background: var(--color-bg);
@@ -113,6 +113,10 @@ body {
 .text-block h1, .text-block h2, .text-block h3 {
   margin-top: 1.5em;
   margin-bottom: 0.5em;
+}
+.text-block:first-child h1:first-child,
+.text-block:first-child h2:first-child {
+  margin-top: 0;
 }
 .text-block code {
   background: var(--color-code-bg);
