@@ -27,20 +27,6 @@ function toggleTheme() {
 }
 
 // ------------------------------------------------------------
-// Info popover
-// ------------------------------------------------------------
-
-function toggleInfo() {
-  document.getElementById('infoPopover').classList.toggle('visible');
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.info-wrap')) {
-    document.getElementById('infoPopover').classList.remove('visible');
-  }
-});
-
-// ------------------------------------------------------------
 // DOM references
 // ------------------------------------------------------------
 
@@ -60,6 +46,45 @@ const toastEl     = document.getElementById('toast');
 const examplesSel = document.getElementById('examples');
 
 // ------------------------------------------------------------
+// Mode auto-detection
+// ------------------------------------------------------------
+
+let currentMode = 'cm'; // 'cm' or 'embedded'
+
+// Detect embedded mode from content: if the input contains a ```cm or ```calcmark
+// fenced code block, it's embedded mode (Markdown with CalcMark blocks).
+const embeddedPattern = /^[ ]{0,3}(`{3,}|~{3,})\s*(cm|calcmark)\b/m;
+
+function detectMode(source) {
+  return embeddedPattern.test(source) ? 'embedded' : 'cm';
+}
+
+function applyMode(mode) {
+  currentMode = mode;
+
+  // Update mode indicator in status bar
+  const modeLabel = document.getElementById('modeLabel');
+  if (modeLabel) {
+    modeLabel.textContent = mode === 'embedded' ? 'mode: markdown' : 'mode: calcmark';
+  }
+
+  // In embedded mode, hide Text and JSON output options
+  const textOpt = outputMode.querySelector('option[value="text"]');
+  const jsonOpt = outputMode.querySelector('option[value="json"]');
+  if (mode === 'embedded') {
+    textOpt.disabled = true;
+    jsonOpt.disabled = true;
+    if (outputMode.value === 'text' || outputMode.value === 'json') {
+      outputMode.value = 'preview';
+    }
+    cmBtn.style.display = 'none';
+  } else {
+    textOpt.disabled = false;
+    jsonOpt.disabled = false;
+  }
+}
+
+// ------------------------------------------------------------
 // Render state
 // ------------------------------------------------------------
 
@@ -69,9 +94,11 @@ const EXAMPLES_BASE = 'https://raw.githubusercontent.com/CalcMark/go-calcmark/ma
 let debounceTimer = null;
 let currentController = null;
 let lastRenderedSource = '';
+let lastRenderedMode = '';
 let lastRawSource = '';
 let lastRawFormat = '';
 let lastRawLocale = '';
+let lastRawMode = '';
 let canShareUrl = false;
 
 // ------------------------------------------------------------
@@ -153,7 +180,12 @@ function updateCliHint() {
   const hash = location.hash;
   let displayHint, fullCommand;
 
-  if (hash && hash.startsWith('#0:')) {
+  if (currentMode === 'embedded') {
+    const formatFlag = { preview: 'html', html: 'html', markdown: 'md' };
+    const fmt = formatFlag[mode] || 'html';
+    fullCommand = `cm convert --embedded --to ${fmt} [file.md]`;
+    displayHint = fullCommand;
+  } else if (hash && hash.startsWith('#0:')) {
     const payload = hash.slice(3);
     const url = `${location.origin}/d/${payload}`;
     fullCommand = `cm remote --http ${url}`;
@@ -246,7 +278,8 @@ async function updateHash() {
   }
   try {
     const encoded = await compressToBase64url(source);
-    const fragment = `0:${encoded}`;
+    const prefix = currentMode === 'embedded' ? '1' : '0';
+    const fragment = `${prefix}:${encoded}`;
     const url = `${location.origin}/#${fragment}`;
     if (url.length > 2000) {
       history.replaceState(null, '', '/');
@@ -254,7 +287,8 @@ async function updateHash() {
       canShareUrl = false;
     } else {
       history.replaceState(null, '', `/#${fragment}`);
-      cmBtn.style.display = '';
+      // cm CLI button only for cm mode (embedded not supported by /d/ endpoint)
+      cmBtn.style.display = currentMode === 'cm' ? '' : 'none';
       canShareUrl = true;
     }
     updateShareButton();
@@ -278,7 +312,8 @@ async function checkShareability() {
   }
   try {
     const encoded = await compressToBase64url(source);
-    const url = `${location.origin}/#0:${encoded}`;
+    const prefix = currentMode === 'embedded' ? '1' : '0';
+    const url = `${location.origin}/#${prefix}:${encoded}`;
     canShareUrl = url.length <= 2000;
   } catch {
     canShareUrl = false;
@@ -295,16 +330,16 @@ async function share() {
   if (!source.trim() || !canShareUrl) return;
 
   let hash = location.hash;
-  if (!hash || !hash.startsWith('#0:')) {
+  const prefix = currentMode === 'embedded' ? '1' : '0';
+  if (!hash || (!hash.startsWith('#0:') && !hash.startsWith('#1:'))) {
     try {
       const encoded = await compressToBase64url(source);
-      hash = `#0:${encoded}`;
+      hash = `#${prefix}:${encoded}`;
     } catch {
       return;
     }
   }
   copyToClipboard(`${location.origin}/${hash}`);
-  updateCliHint();
 }
 
 function copySource() {
@@ -313,6 +348,7 @@ function copySource() {
 }
 
 function getCmCommand() {
+  if (currentMode === 'embedded') return null;
   const hash = location.hash;
   if (!hash || !hash.startsWith('#0:')) return null;
   const payload = hash.slice(3);
@@ -397,10 +433,14 @@ function convertUrl(format) {
   let url = `/api/convert?format=${format}`;
   const locale = localeSel.value;
   if (locale) url += `&locale=${locale}`;
+  if (currentMode === 'embedded') url += '&embedded=true';
   return url;
 }
 
 function renderCurrent() {
+  // Auto-detect mode from content on each render
+  applyMode(detectMode(inputEl.value));
+
   const mode = outputMode.value;
   if (mode === 'preview') {
     renderPreview();
@@ -412,7 +452,7 @@ function renderCurrent() {
 async function renderPreview() {
   const source = inputEl.value;
   if (!source.trim()) return;
-  if (source === lastRenderedSource) { showPreviewMode(); return; }
+  if (source === lastRenderedSource && currentMode === lastRenderedMode) { showPreviewMode(); return; }
 
   if (currentController) currentController.abort();
   currentController = new AbortController();
@@ -434,6 +474,7 @@ async function renderPreview() {
     }
     const html = await res.text();
     lastRenderedSource = source;
+    lastRenderedMode = currentMode;
     writeToPreview(html, scrollPercent);
     showPreviewMode();
     setStatus('', false, performance.now() - t0);
@@ -455,7 +496,7 @@ async function renderRaw(format) {
   if (!source.trim()) return;
 
   const curLocale = localeSel.value;
-  if (lastRawSource && source === lastRawSource && format === lastRawFormat && curLocale === lastRawLocale) {
+  if (lastRawSource && source === lastRawSource && format === lastRawFormat && curLocale === lastRawLocale && currentMode === lastRawMode) {
     showRawMode();
     return;
   }
@@ -485,6 +526,7 @@ async function renderRaw(format) {
     lastRawSource = source;
     lastRawFormat = format;
     lastRawLocale = curLocale;
+    lastRawMode = currentMode;
     showRawMode();
     setStatus('', false, performance.now() - t0);
     checkShareability();
@@ -554,12 +596,27 @@ localeSel.addEventListener('change', () => {
 
 async function loadFromHash() {
   const hash = location.hash.slice(1);
-  if (!hash || !hash.startsWith('0:')) return;
+  if (!hash) return;
+
+  let mode, payload;
+  if (hash.startsWith('1:')) {
+    mode = 'embedded';
+    payload = hash.slice(2);
+  } else if (hash.startsWith('0:')) {
+    mode = 'cm';
+    payload = hash.slice(2);
+  } else {
+    return;
+  }
+
   try {
-    const text = await decompressFromBase64url(hash.slice(2));
+    const text = await decompressFromBase64url(payload);
     inputEl.value = text;
     inputEl.selectionStart = inputEl.selectionEnd = 0;
     shareBtn.disabled = false;
+    // Mode from hash prefix overrides auto-detection for shared URLs
+    // (compressed content can't be scanned without decompressing)
+    currentMode = mode;
   } catch {
     showToast('Could not decode shared document', 'error', 3000);
   }
@@ -569,13 +626,15 @@ async function loadFromHash() {
 // Load example document
 // ------------------------------------------------------------
 
-async function loadExample(name) {
+async function loadExample(name, ext) {
+  ext = ext || 'cm';
   try {
-    const res = await fetch(`${EXAMPLES_BASE}${name}.cm`);
+    const res = await fetch(`${EXAMPLES_BASE}${name}.${ext}`);
     if (!res.ok) throw new Error();
     inputEl.value = await res.text();
     inputEl.selectionStart = inputEl.selectionEnd = 0;
     lastRenderedSource = '';
+    lastRenderedMode = '';
     lastRawSource = '';
     renderCurrent();
     history.replaceState(null, '', `/x/${name}`);
@@ -587,9 +646,11 @@ async function loadExample(name) {
 }
 
 examplesSel.addEventListener('change', async () => {
-  const name = examplesSel.value;
+  const opt = examplesSel.selectedOptions[0];
+  const name = opt?.value;
   if (!name) return;
-  await loadExample(name);
+  const ext = opt.dataset.ext || 'cm';
+  await loadExample(name, ext);
   examplesSel.value = '';
 });
 
@@ -605,7 +666,7 @@ examplesSel.addEventListener('change', async () => {
     await loadFromHash();
   }
   if (inputEl.value.trim()) {
-    if (location.hash?.startsWith('#0:')) {
+    if (location.hash?.startsWith('#0:') && currentMode === 'cm') {
       cmBtn.style.display = '';
     }
     renderCurrent();

@@ -11,10 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CalcMark/go-calcmark/format"
-	"github.com/CalcMark/go-calcmark/format/display"
-	impldoc "github.com/CalcMark/go-calcmark/impl/document"
-	"github.com/CalcMark/go-calcmark/spec/document"
+	"github.com/CalcMark/go-calcmark"
 )
 
 const maxBodySize = 1 << 20 // 1MB
@@ -67,49 +64,33 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse document
-	doc, err := document.NewDocument(source)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "parse error: "+err.Error())
+	// Mode: cm (default) or embedded
+	mode := calcmark.CM
+	if r.URL.Query().Get("embedded") == "true" {
+		mode = calcmark.Embedded
+	}
+
+	// Convert using the unified library API
+	result, convErr := calcmark.Convert(source, calcmark.Options{
+		Mode:     mode,
+		Format:   internalFormat,
+		Template: larkHTMLTemplate,
+		Locale:   r.URL.Query().Get("locale"),
+	})
+
+	// Partial errors (embedded blocks failed) still have useful output — write it.
+	if result != "" {
+		w.Header().Set("Content-Type", contentTypes[internalFormat])
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(result))
+	} else if convErr != nil {
+		writeError(w, http.StatusBadRequest, convErr.Error())
 		return
 	}
-
-	// Evaluate
-	evaluator := impldoc.NewEvaluator()
-	if err := evaluator.Evaluate(doc); err != nil {
-		writeError(w, http.StatusBadRequest, "evaluation error: "+err.Error())
-		return
-	}
-
-	// Locale
-	locale := r.URL.Query().Get("locale")
-	opts := format.Options{}
-	if locale != "" {
-		cfg, err := display.NewConfig(locale)
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid locale: "+locale)
-			return
-		}
-		opts.DisplayFormatter = display.NewFormatter(cfg)
-	}
-
-	// Format output
-	formatter := format.GetFormatter(internalFormat, "")
-	if internalFormat == "html" {
-		opts.Template = larkHTMLTemplate
-	}
-	var buf bytes.Buffer
-	if err := formatter.Format(&buf, doc, opts); err != nil {
-		writeError(w, http.StatusInternalServerError, "internal error")
-		return
-	}
-
-	w.Header().Set("Content-Type", contentTypes[internalFormat])
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
 
 	if debug {
-		log.Printf("convert format=%s size=%d duration=%s", userFormat, len(body), time.Since(start))
+		log.Printf("convert format=%s embedded=%v size=%d duration=%s",
+			userFormat, mode == calcmark.Embedded, len(body), time.Since(start))
 	}
 }
 
