@@ -627,9 +627,18 @@ async function loadFromHash() {
 // ------------------------------------------------------------
 
 async function loadExample(name, ext) {
-  ext = ext || 'cm';
   try {
-    const res = await fetch(`${EXAMPLES_BASE}${name}.${ext}`);
+    let res;
+    if (ext) {
+      res = await fetch(`${EXAMPLES_BASE}${name}.${ext}`);
+    } else {
+      // Try .cm first, fall back to .md for embedded examples.
+      res = await fetch(`${EXAMPLES_BASE}${name}.cm`);
+      if (!res.ok) {
+        ext = 'md';
+        res = await fetch(`${EXAMPLES_BASE}${name}.md`);
+      }
+    }
     if (!res.ok) throw new Error();
     inputEl.value = await res.text();
     inputEl.selectionStart = inputEl.selectionEnd = 0;
