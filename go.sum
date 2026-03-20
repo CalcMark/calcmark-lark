@@ -1,5 +1,5 @@
-github.com/CalcMark/go-calcmark v1.9.2 h1:zCtyuiCfAhXQZYp/U1oRjb3d2PxRxQ6q2KtfApnpteo=
-github.com/CalcMark/go-calcmark v1.9.2/go.mod h1:vZFOGXxhr4D8lAmaabeVag9FbL8pzokPT0MGoJIqCwU=
+github.com/CalcMark/go-calcmark v1.9.3 h1:IaphXLjgoBHqb3qQCs0JwqXoGHAHua3Dm9LMWTK1GN0=
+github.com/CalcMark/go-calcmark v1.9.3/go.mod h1:vZFOGXxhr4D8lAmaabeVag9FbL8pzokPT0MGoJIqCwU=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
