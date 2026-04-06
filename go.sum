@@ -1,9 +1,11 @@
-github.com/CalcMark/go-calcmark v1.9.11 h1:3/U2PW/59L3yuZanCjMmphtJichyY6RFmWP4xrgpbx8=
-github.com/CalcMark/go-calcmark v1.9.11/go.mod h1:vZFOGXxhr4D8lAmaabeVag9FbL8pzokPT0MGoJIqCwU=
+github.com/CalcMark/go-calcmark v1.9.12 h1:76NE29zHyR9b6gTTe9KoWfTrsMacJNQSsGFUJj7+uJA=
+github.com/CalcMark/go-calcmark v1.9.12/go.mod h1:GLWExDVP6nHWBQoVszzmh8E2nWFUigUTyrHL+fY914A=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/goodsign/monday v1.0.2 h1:k8kRMkCRVfCTWOU4dRfRgneQsWlB1+mJd3MxG0lGLzQ=
+github.com/goodsign/monday v1.0.2/go.mod h1:r4T4breXpoFwspQNM+u2sLxJb2zyTaxVGqUfTBjWOu8=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/css v1.0.1 h1:ntNaBIghp6JmvWnxbZKANoLyuXTPZ4cAMlo6RyhlbO8=

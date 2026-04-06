@@ -3,12 +3,13 @@ module github.com/CalcMark/calcmark-lark
 go 1.25.1
 
 require (
-	github.com/CalcMark/go-calcmark v1.9.11
+	github.com/CalcMark/go-calcmark v1.9.12
 	golang.org/x/time v0.15.0
 )
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/goodsign/monday v1.0.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/martinlindhe/unit v0.0.0-20230420213220-4adfd7d0a0d6 // indirect
