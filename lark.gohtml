@@ -107,6 +107,21 @@ body {
   border-left: 3px solid var(--color-error);
   margin-top: 0.5em;
 }
+.calc-line-diagnostic {
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--color-error);
+  padding: 0.15em 0 0.3em 1.5em;
+}
+.calc-line-diagnostic::before {
+  content: "✗ ";
+}
+.calc-line-diagnostic.calc-cascading {
+  color: var(--color-warning, #b08800);
+}
+.calc-line-diagnostic.calc-cascading::before {
+  content: "⚠ ";
+}
 .calc-warning {
   color: var(--color-warning, #b08800);
   background: var(--color-warning-bg, #fff8e1);
@@ -354,14 +369,17 @@ body {
 {{if eq .Type "calculation"}}
 <div class="calc-block">
   {{range $i, $line := .SourceLines}}
-  <div class="calc-line">
+  <div class="calc-line{{if $line.Error}} calc-line-error{{end}}{{if $line.IsCascading}} calc-line-cascading{{end}}">
     <code class="calc-source">{{$line.Source}}</code>
     {{if $line.Result}}
     <span class="calc-inline-result">{{$line.Result}}</span>
     {{end}}
   </div>
+  {{- if $line.Error}}
+  <div class="calc-line-diagnostic{{if $line.IsCascading}} calc-cascading{{end}}">{{$line.Error}}</div>
+  {{- end}}
   {{end}}
-  {{if .Error}}
+  {{if and .Error (not .HasLineDiagnostic)}}
   <div class="calc-error"><strong>Error:</strong> {{.Error}}</div>
   {{end}}
 </div>
