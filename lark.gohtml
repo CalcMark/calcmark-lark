@@ -33,6 +33,9 @@
     --color-code-text: #e5e5e5;
     --color-error: #f85149;
     --color-error-bg: #3d1417;
+    --color-warning: #d4a017;
+    --color-warning-bg: #2d2a1e;
+    --color-warning-border: #d4a017;
   }
 }
 [data-theme="dark"] {
@@ -47,6 +50,9 @@
   --color-code-text: #e5e5e5;
   --color-error: #f85149;
   --color-error-bg: #3d1417;
+  --color-warning: #d4a017;
+  --color-warning-bg: #2d2a1e;
+  --color-warning-border: #d4a017;
 }
 body {
   font-family: var(--font-sans);
@@ -100,6 +106,15 @@ body {
   border-radius: 3px;
   border-left: 3px solid var(--color-error);
   margin-top: 0.5em;
+}
+.calc-warning {
+  color: var(--color-warning, #b08800);
+  background: var(--color-warning-bg, #fff8e1);
+  padding: 0.5em;
+  border-radius: 3px;
+  border-left: 3px solid var(--color-warning-border, #e6a817);
+  margin-top: 0.5em;
+  font-size: 0.9em;
 }
 .text-block {
   margin: 1.5em 0;
@@ -351,7 +366,9 @@ body {
   {{end}}
 </div>
 {{else}}
-<div class="text-block">{{.HTML}}</div>
+<div class="text-block">{{.HTML}}{{range .Warnings}}
+<div class="calc-warning"><strong>Warning:</strong> {{.}}</div>
+{{end}}</div>
 {{end}}
 {{end}}
 {{end}}
