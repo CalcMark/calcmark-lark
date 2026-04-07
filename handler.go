@@ -88,7 +88,7 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if debug {
+	if debugMode {
 		log.Printf("convert format=%s embedded=%v size=%d duration=%s",
 			userFormat, mode == calcmark.Embedded, len(body), time.Since(start))
 	}
@@ -137,13 +137,13 @@ func handleDocument(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write(buf.Bytes())
 
-	if debug {
+	if debugMode {
 		log.Printf("document payload=%d decompressed=%d", len(decoded), buf.Len())
 	}
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {
-	if debug {
+	if debugMode {
 		log.Printf("error status=%d msg=%q", status, msg)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

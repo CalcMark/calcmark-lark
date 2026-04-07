@@ -17,11 +17,18 @@ var larkHTMLTemplate string
 //go:embed templates
 var templateFS embed.FS
 
+// pageData is the data passed to page templates.
+type pageData struct {
+	CalcMarkVersion string
+}
+
 // pageTemplates holds pre-rendered page HTML keyed by page name.
 var pageTemplates = map[string]string{}
 
 func init() {
 	layout := template.Must(template.ParseFS(templateFS, "templates/layout.gohtml"))
+
+	data := pageData{CalcMarkVersion: calcmarkVersion()}
 
 	pages := []string{"index", "about"}
 	for _, page := range pages {
@@ -29,7 +36,7 @@ func init() {
 		t := template.Must(template.Must(layout.Clone()).ParseFS(templateFS, "templates/"+page+".gohtml"))
 
 		var buf bytes.Buffer
-		if err := t.ExecuteTemplate(&buf, "layout", nil); err != nil {
+		if err := t.ExecuteTemplate(&buf, "layout", data); err != nil {
 			log.Fatalf("render %s: %v", page, err)
 		}
 		pageTemplates[page] = buf.String()

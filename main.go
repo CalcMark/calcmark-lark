@@ -8,17 +8,32 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"time"
 )
 
 //go:embed static
 var staticFS embed.FS
 
-var debug bool
+var debugMode bool
+
+// calcmarkVersion returns the go-calcmark module version from build info.
+func calcmarkVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "dev"
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == "github.com/CalcMark/go-calcmark" {
+			return dep.Version
+		}
+	}
+	return "dev"
+}
 
 func main() {
 	port := flag.String("port", "", "port to listen on (default: $PORT or 8080)")
-	flag.BoolVar(&debug, "debug", false, "enable debug logging")
+	flag.BoolVar(&debugMode, "debug", false, "enable debug logging")
 	flag.Parse()
 
 	if *port == "" {
@@ -67,7 +82,7 @@ func main() {
 	})
 
 	log.Printf("CalcMark Lark listening on :%s", *port)
-	if debug {
+	if debugMode {
 		log.Println("debug logging enabled")
 	}
 	log.Fatal(http.ListenAndServe(":"+*port, mux))
