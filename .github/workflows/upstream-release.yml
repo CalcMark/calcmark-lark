@@ -11,12 +11,16 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      GONOSUMDB: github.com/CalcMark/*
+      GONOSUMCHECK: github.com/CalcMark/*
+      GOPRIVATE: github.com/CalcMark/*
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.DEPLOY_PAT }}
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -33,7 +37,18 @@ jobs:
       - name: Update go-calcmark
         if: steps.validate.outputs.skip != 'true'
         run: |
-          go get "github.com/CalcMark/go-calcmark@${{ steps.validate.outputs.tag }}"
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: go get go-calcmark@${{ steps.validate.outputs.tag }}"
+            if go get "github.com/CalcMark/go-calcmark@${{ steps.validate.outputs.tag }}"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Failed after 3 attempts"
+              exit 1
+            fi
+            echo "Retrying in 15s..."
+            sleep 15
+          done
           go mod tidy
 
       - name: Install Task
