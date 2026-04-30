@@ -34,12 +34,30 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Determine module path
+        if: steps.validate.outputs.skip != 'true'
+        id: modpath
+        run: |
+          # go-calcmark v2.x uses the /v2 module path per Go's
+          # major-version-suffix rule. Pre-v2 releases used the bare
+          # path. Pick the right one based on the major version in the
+          # tag so this workflow keeps working across major bumps.
+          TAG="${{ steps.validate.outputs.tag }}"
+          MAJOR=$(echo "$TAG" | sed -E 's/^v([0-9]+)\..*$/\1/')
+          if [ "$MAJOR" -ge 2 ]; then
+            echo "path=github.com/CalcMark/go-calcmark/v${MAJOR}" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=github.com/CalcMark/go-calcmark" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Update go-calcmark
         if: steps.validate.outputs.skip != 'true'
         run: |
+          MODULE="${{ steps.modpath.outputs.path }}"
+          TAG="${{ steps.validate.outputs.tag }}"
           for attempt in 1 2 3; do
-            echo "Attempt $attempt: go get go-calcmark@${{ steps.validate.outputs.tag }}"
-            if go get "github.com/CalcMark/go-calcmark@${{ steps.validate.outputs.tag }}"; then
+            echo "Attempt $attempt: go get ${MODULE}@${TAG}"
+            if go get "${MODULE}@${TAG}"; then
               break
             fi
             if [ "$attempt" -eq 3 ]; then
