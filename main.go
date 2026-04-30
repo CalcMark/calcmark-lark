@@ -24,7 +24,7 @@ func calcmarkVersion() string {
 		return "dev"
 	}
 	for _, dep := range info.Deps {
-		if dep.Path == "github.com/CalcMark/go-calcmark" {
+		if dep.Path == "github.com/CalcMark/go-calcmark/v2" {
 			return dep.Version
 		}
 	}
