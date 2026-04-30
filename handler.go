@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CalcMark/go-calcmark"
+	"github.com/CalcMark/go-calcmark/v2"
 )
 
 const maxBodySize = 1 << 20 // 1MB

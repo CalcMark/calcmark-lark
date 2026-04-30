@@ -2,14 +2,8 @@ module github.com/CalcMark/calcmark-lark
 
 go 1.25.1
 
-// Local trial against the v2.0 Period type system on
-// upstream go-calcmark feat/period-type-system-v2 (PR #145).
-// Remove this replace and bump to the released v2.0.0 once the
-// upstream PR merges and tags.
-replace github.com/CalcMark/go-calcmark => /Users/bitsbyme/projects/cm/go-calcmark
-
 require (
-	github.com/CalcMark/go-calcmark v1.12.1
+	github.com/CalcMark/go-calcmark/v2 v2.0.0-rc.1
 	golang.org/x/time v0.15.0
 )
 
