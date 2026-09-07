@@ -31,15 +31,23 @@ tasks:
     cmds:
       - go vet ./...
 
+  # Lint tools are PINNED, not @latest. The upstream-release automation
+  # runs `task release` on a runner whose toolchain is fixed by go.mod
+  # (GOTOOLCHAIN=local), so an @latest tool that starts requiring a
+  # newer Go silently breaks every release bump: staticcheck v0.8.1
+  # (needs go1.26) killed the v2.3.0 bump, modernize@latest killed
+  # v2.2.11/12. When bumping the go directive in go.mod, bump these
+  # pins to match (newest staticcheck / gopls whose go.mod requirement
+  # is satisfied).
   staticcheck:
     internal: true
     cmds:
-      - go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+      - go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
 
   modernize:
     internal: true
     cmds:
-      - go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest ./...
+      - go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.1 ./...
       - echo '✓ Modernize check passed'
 
   lint:
